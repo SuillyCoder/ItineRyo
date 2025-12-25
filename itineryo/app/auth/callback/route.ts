@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/';
+  const next = requestUrl.searchParams.get('next') || '/dashboard';
 
   if (code) {
     const cookieStore = await cookies();
@@ -25,17 +25,20 @@ export async function GET(request: Request) {
                 cookieStore.set(name, value, options);
               });
             } catch (error) {
-              // Handle error in middleware/server component
+              console.error('Error setting cookies:', error);
             }
           },
         },
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
-    if (!error) {
+    if (!error && data?.session) {
+      // Successfully exchanged code for session
       return NextResponse.redirect(new URL(next, requestUrl.origin));
+    } else {
+      console.error('Auth error:', error);
     }
   }
 
