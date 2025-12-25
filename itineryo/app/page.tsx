@@ -1,65 +1,152 @@
-'use client';  // ⬅️ ADD THIS LINE!
+'use client';
 
-import React, { useState } from 'react';
-import { Plus, MapPin, Calendar, Users, Edit, Trash2, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, MapPin, Calendar, Users, Edit, Trash2, ChevronRight, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
+import { LoginPage } from '@/components/LoginPage';
+import { supabase, Trip } from '@/lib/supabase';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-// Types
 interface Prefecture {
   id: string;
   name: string;
-  nameJp: string;
+  name_jp: string;
   region: string;
 }
 
-interface Trip {
-  id: string;
-  tripName: string;
-  startDate: string;
-  endDate: string;
-  primaryPrefectureId: string | null;
-  prefectureName: string | null;
-  numTravelers: number;
-  createdAt: string;
-}
-
-// Mock Prefecture Data
-const PREFECTURES: Prefecture[] = [
-  { id: '1', name: 'Tokyo', nameJp: '東京都', region: 'Kanto' },
-  { id: '2', name: 'Kyoto', nameJp: '京都府', region: 'Kansai' },
-  { id: '3', name: 'Osaka', nameJp: '大阪府', region: 'Kansai' },
-  { id: '4', name: 'Hokkaido', nameJp: '北海道', region: 'Hokkaido' },
-  { id: '5', name: 'Okinawa', nameJp: '沖縄県', region: 'Kyushu' },
-  { id: '6', name: 'Fukuoka', nameJp: '福岡県', region: 'Kyushu' },
-];
-
-export default function ItineraryApp() {
+export default function HomePage() {
+  const { user, loading, signOut } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [prefectures, setPrefectures] = useState<Prefecture[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+  const router = useRouter();
 
-  const handleCreateTrip = (newTrip: Omit<Trip, 'id' | 'createdAt'>) => {
-    const trip: Trip = {
-      ...newTrip,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    setTrips([...trips, trip]);
-    setShowCreateModal(false);
-  };
+  // Show login page if not authenticated
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleUpdateTrip = (updatedTrip: Trip) => {
-    setTrips(trips.map(t => t.id === updatedTrip.id ? updatedTrip : t));
-    setEditingTrip(null);
-  };
+  if (!user) {
+    return <LoginPage />;
+  }
 
-  const handleDeleteTrip = (tripId: string) => {
-    if (confirm('Are you sure you want to delete this trip?')) {
-      setTrips(trips.filter(t => t.id !== tripId));
+  // Load prefectures and trips
+  useEffect(() => {
+    if (user) {
+      loadPrefectures();
+      loadTrips();
     }
+  }, [user]);
+
+  const loadPrefectures = async () => {
+    const { data, error } = await supabase
+      .from('prefectures')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('Error loading prefectures:', error);
+    } else {
+      setPrefectures(data || []);
+    }
+  };
+
+  const loadTrips = async () => {
+    setLoadingTrips(true);
+    const { data, error } = await supabase
+      .from('trips')
+      .select(`
+        *,
+        prefectures (name, name_jp)
+      `)
+      .eq('user_id', user?.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading trips:', error);
+    } else {
+      setTrips(data || []);
+    }
+    setLoadingTrips(false);
+  };
+
+  const handleCreateTrip = async (tripData: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    const { data, error } = await supabase
+      .from('trips')
+      .insert([
+        {
+          ...tripData,
+          user_id: user.id,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating trip:', error);
+      alert('Failed to create trip. Please try again.');
+    } else {
+      setTrips([data, ...trips]);
+      setShowCreateModal(false);
+    }
+  };
+
+  const handleUpdateTrip = async (updatedTrip: Trip) => {
+    const { error } = await supabase
+      .from('trips')
+      .update({
+        trip_name: updatedTrip.trip_name,
+        start_date: updatedTrip.start_date,
+        end_date: updatedTrip.end_date,
+        primary_prefecture_id: updatedTrip.primary_prefecture_id,
+        num_travelers: updatedTrip.num_travelers,
+      })
+      .eq('id', updatedTrip.id);
+
+    if (error) {
+      console.error('Error updating trip:', error);
+      alert('Failed to update trip. Please try again.');
+    } else {
+      await loadTrips();
+      setEditingTrip(null);
+    }
+  };
+
+  const handleDeleteTrip = async (tripId: string) => {
+    if (!confirm('Are you sure you want to delete this trip? This will also delete all activities and budget data.')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('trips')
+      .delete()
+      .eq('id', tripId);
+
+    if (error) {
+      console.error('Error deleting trip:', error);
+      alert('Failed to delete trip. Please try again.');
+    } else {
+      setTrips(trips.filter((t) => t.id !== tripId));
+    }
+  };
+
+  const handleOpenTrip = (tripId: string) => {
+    router.push(`/trip/${tripId}`);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -69,85 +156,110 @@ export default function ItineraryApp() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Itineryo</h1>
-                <p className="text-sm text-gray-500">Your Japan Travel Planner</p>
+                <p className="text-sm text-gray-500">
+                  {user.user_metadata?.name || user.email}
+                </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="font-medium">Create New Trip</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/settings"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">Create New Trip</span>
+              </button>
+              <button
+                onClick={signOut}
+                className="flex items-center space-x-2 text-red-600 hover:text-red-700 px-3 py-2"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {trips.length === 0 ? (
+        {loadingTrips ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your trips...</p>
+          </div>
+        ) : trips.length === 0 ? (
           <EmptyState onCreateTrip={() => setShowCreateModal(true)} />
         ) : (
-          <TripList
-            trips={trips}
-            onEdit={setEditingTrip}
-            onDelete={handleDeleteTrip}
-          />
+          <TripList trips={trips} onEdit={setEditingTrip} onDelete={handleDeleteTrip} onOpen={handleOpenTrip} />
         )}
       </main>
 
+      {/* Create Modal */}
       {showCreateModal && (
         <TripModal
           mode="create"
           onClose={() => setShowCreateModal(false)}
           onSave={handleCreateTrip}
-          prefectures={PREFECTURES}
+          prefectures={prefectures}
         />
       )}
 
+      {/* Edit Modal */}
       {editingTrip && (
         <TripModal
           mode="edit"
           trip={editingTrip}
           onClose={() => setEditingTrip(null)}
           onSave={handleUpdateTrip}
-          prefectures={PREFECTURES}
+          prefectures={prefectures}
         />
       )}
     </div>
   );
 }
 
+// Empty State Component
 function EmptyState({ onCreateTrip }: { onCreateTrip: () => void }) {
   return (
     <div className="text-center py-20">
-      <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-        <MapPin className="w-10 h-10 text-blue-600" />
+      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <MapPin className="w-10 h-10 text-white" />
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">
-        Start Planning Your Journey
+        Start Your Japanese Adventure
       </h2>
-      <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
-        Create your first trip to Japan and begin organizing your perfect itinerary
+      <p className="text-gray-600 mb-8 max-w-md mx-auto">
+        Create your first trip to begin planning your perfect itinerary to Japan.
+        Track activities, manage budgets, and explore amazing destinations.
       </p>
       <button
         onClick={onCreateTrip}
-        className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium shadow-lg"
+        className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
       >
-        <Plus className="w-6 h-6" />
-        <span>Create Your First Trip</span>
+        <Plus className="w-5 h-5" />
+        <span className="font-medium">Create Your First Trip</span>
       </button>
     </div>
   );
 }
 
+// Trip List Component
 function TripList({
   trips,
   onEdit,
   onDelete,
+  onOpen,
 }: {
   trips: Trip[];
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
+  onOpen: (id: string) => void;
 }) {
   const calculateDuration = (start: string, end: string) => {
     const days = Math.ceil(
@@ -166,11 +278,11 @@ function TripList({
             className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow border border-gray-200 overflow-hidden"
           >
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
-              <h3 className="text-xl font-bold text-white mb-1">{trip.tripName}</h3>
-              {trip.prefectureName && (
+              <h3 className="text-xl font-bold text-white mb-1">{trip.trip_name}</h3>
+              {trip.prefectures && (
                 <p className="text-blue-100 text-sm flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
-                  {trip.prefectureName}
+                  {trip.prefectures.name}
                 </p>
               )}
             </div>
@@ -180,19 +292,19 @@ function TripList({
                 <Calendar className="w-5 h-5 mr-3 text-gray-400" />
                 <div className="text-sm">
                   <p className="font-medium">
-                    {new Date(trip.startDate).toLocaleDateString('en-US', {
+                    {new Date(trip.start_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}{' '}
                     →{' '}
-                    {new Date(trip.endDate).toLocaleDateString('en-US', {
+                    {new Date(trip.end_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </p>
                   <p className="text-gray-500">
-                    {calculateDuration(trip.startDate, trip.endDate)} days
+                    {calculateDuration(trip.start_date, trip.end_date)} days
                   </p>
                 </div>
               </div>
@@ -200,7 +312,7 @@ function TripList({
               <div className="flex items-center text-gray-700">
                 <Users className="w-5 h-5 mr-3 text-gray-400" />
                 <span className="text-sm">
-                  {trip.numTravelers} {trip.numTravelers === 1 ? 'traveler' : 'travelers'}
+                  {trip.num_travelers} {trip.num_travelers === 1 ? 'traveler' : 'travelers'}
                 </span>
               </div>
             </div>
@@ -208,20 +320,23 @@ function TripList({
             <div className="border-t border-gray-200 p-3 bg-gray-50 flex justify-between">
               <button
                 onClick={() => onEdit(trip)}
-                className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 px-3 py-1 rounded transition-colors"
               >
                 <Edit className="w-4 h-4" />
-                <span>Edit</span>
+                <span className="text-sm">Edit</span>
               </button>
               <button
                 onClick={() => onDelete(trip.id)}
-                className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm font-medium"
+                className="flex items-center space-x-1 text-gray-600 hover:text-red-600 px-3 py-1 rounded transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete</span>
+                <span className="text-sm">Delete</span>
               </button>
-              <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 text-sm font-medium">
-                <span>Open</span>
+              <button
+                onClick={() => onOpen(trip.id)}
+                className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 px-3 py-1 rounded transition-colors font-medium"
+              >
+                <span className="text-sm">Open</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -232,6 +347,7 @@ function TripList({
   );
 }
 
+// Trip Modal Component
 function TripModal({
   mode,
   trip,
@@ -246,219 +362,140 @@ function TripModal({
   prefectures: Prefecture[];
 }) {
   const [formData, setFormData] = useState({
-    tripName: trip?.tripName || '',
-    startDate: trip?.startDate || '',
-    endDate: trip?.endDate || '',
-    primaryPrefectureId: trip?.primaryPrefectureId || '',
-    numTravelers: trip?.numTravelers || 1,
+    trip_name: trip?.trip_name || '',
+    start_date: trip?.start_date || '',
+    end_date: trip?.end_date || '',
+    primary_prefecture_id: trip?.primary_prefecture_id || '',
+    num_travelers: trip?.num_travelers || 1,
   });
 
-  const [step, setStep] = useState<'details' | 'prefecture'>(mode === 'edit' ? 'details' : 'details');
-
-  const handleContinue = () => {
-    if (!formData.tripName || !formData.startDate || !formData.endDate) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.trip_name || !formData.start_date || !formData.end_date) {
       alert('Please fill in all required fields');
       return;
     }
-    if (mode === 'create' && step === 'details') {
-      setStep('prefecture');
-    } else {
-      handleSave();
-    }
-  };
 
-  const handleSave = () => {
-    const selectedPrefecture = prefectures.find(p => p.id === formData.primaryPrefectureId);
-    
-    const tripData = {
-      ...formData,
-      primaryPrefectureId: formData.primaryPrefectureId || null,
-      prefectureName: selectedPrefecture?.name || null,
-    };
+    if (new Date(formData.end_date) < new Date(formData.start_date)) {
+      alert('End date must be after start date');
+      return;
+    }
 
     if (mode === 'edit' && trip) {
-      onSave({ ...trip, ...tripData });
+      onSave({ ...trip, ...formData });
     } else {
-      onSave(tripData);
+      onSave(formData);
     }
-  };
-
-  const handleSkipPrefecture = () => {
-    const tripData = {
-      ...formData,
-      primaryPrefectureId: null,
-      prefectureName: null,
-    };
-    onSave(tripData);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-          <h2 className="text-2xl font-bold">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+          <h2 className="text-2xl font-bold text-gray-900">
             {mode === 'create' ? 'Create New Trip' : 'Edit Trip'}
           </h2>
-          <p className="text-blue-100 mt-1">
-            {step === 'details' ? 'Step 1: Trip Details' : 'Step 2: Choose Prefecture'}
-          </p>
         </div>
 
-        <div className="p-6">
-          {step === 'details' ? (
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Trip Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.tripName}
-                  onChange={(e) => setFormData({ ...formData, tripName: e.target.value })}
-                  placeholder="e.g., Tokyo Spring Adventure 2025"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Travelers
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.numTravelers}
-                  onChange={(e) => setFormData({ ...formData, numTravelers: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {mode === 'edit' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Primary Prefecture
-                  </label>
-                  <select
-                    value={formData.primaryPrefectureId}
-                    onChange={(e) => setFormData({ ...formData, primaryPrefectureId: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Not selected</option>
-                    {prefectures.map((pref) => (
-                      <option key={pref.id} value={pref.id}>
-                        {pref.name} ({pref.nameJp})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-gray-600 mb-4">
-                Select the main prefecture for your trip. You can skip this and set it later.
-              </p>
-              <div className="grid grid-cols-1 gap-3">
-                {prefectures.map((pref) => (
-                  <label
-                    key={pref.id}
-                    className={`flex items-center justify-between p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      formData.primaryPrefectureId === pref.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="radio"
-                        name="prefecture"
-                        value={pref.id}
-                        checked={formData.primaryPrefectureId === pref.id}
-                        onChange={(e) => setFormData({ ...formData, primaryPrefectureId: e.target.value })}
-                        className="w-5 h-5 text-blue-600"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-900">{pref.name}</p>
-                        <p className="text-sm text-gray-500">{pref.nameJp} • {pref.region}</p>
-                      </div>
-                    </div>
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-between mt-6 pt-6 border-t border-gray-200">
-            {step === 'prefecture' && mode === 'create' ? (
-              <>
-                <button
-                  onClick={() => setStep('details')}
-                  className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
-                >
-                  Back
-                </button>
-                <div className="space-x-3">
-                  <button
-                    onClick={handleSkipPrefecture}
-                    className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium"
-                  >
-                    Skip for now
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    Create Trip
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleContinue}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  {mode === 'edit' ? 'Save Changes' : 'Continue'}
-                </button>
-              </>
-            )}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Trip Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trip Name *
+            </label>
+            <input
+              type="text"
+              value={formData.trip_name}
+              onChange={(e) => setFormData({ ...formData, trip_name: e.target.value })}
+              placeholder="e.g., Spring 2025 Tokyo Adventure"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
           </div>
-        </div>
+
+          {/* Prefecture */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Primary Prefecture
+            </label>
+            <select
+              value={formData.primary_prefecture_id}
+              onChange={(e) =>
+                setFormData({ ...formData, primary_prefecture_id: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select a prefecture (optional)</option>
+              {prefectures.map((pref) => (
+                <option key={pref.id} value={pref.id}>
+                  {pref.name} ({pref.name_jp})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date *
+              </label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Date *
+              </label>
+              <input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Number of Travelers */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Number of Travelers
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formData.num_travelers}
+              onChange={(e) =>
+                setFormData({ ...formData, num_travelers: parseInt(e.target.value) })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {mode === 'create' ? 'Create Trip' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
