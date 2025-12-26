@@ -137,8 +137,10 @@ export default function HomePage() {
     router.push(`/trip/${tripId}`);
   };
 
-  // Show loading ONLY during initial auth check
-  if (authLoading) {
+  // Combined loading state: show spinner if EITHER auth is loading OR (we have user but haven't loaded trips yet)
+  const isInitializing = authLoading || (user && !initialLoadComplete && loadingTrips);
+
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
@@ -149,12 +151,12 @@ export default function HomePage() {
     );
   }
 
-  // Show login page if no user
+  // Show login page if no user (and not loading)
   if (!user) {
     return <LoginPage />;
   }
 
-  // Show main content (with internal loading states)
+  // Show main content
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -199,12 +201,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loadingTrips && !initialLoadComplete ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading your trips...</p>
-          </div>
-        ) : trips.length === 0 ? (
+        {trips.length === 0 ? (
           <EmptyState onCreateTrip={() => setShowCreateModal(true)} />
         ) : (
           <TripList trips={trips} onEdit={setEditingTrip} onDelete={handleDeleteTrip} onOpen={handleOpenTrip} />
