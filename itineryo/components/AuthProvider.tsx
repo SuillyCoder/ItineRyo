@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -19,61 +19,46 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
-    // Only run on client side with proper environment variables
-    if (
-      typeof window === 'undefined' ||
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ) {
-      setLoading(false);
-      return;
-    }
-
-    let mounted = true;
-
     // Check active session
-    const initAuth = async () => {
+    const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('📌 Session check:', session ? `Found (${session.user.email})` : 'None', error);
+        setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        console.error('Session check error:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    initAuth();
+    checkSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('📌 Auth state changed:', event, session?.user?.email);
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      // Force a router refresh on sign in/out
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        window.location.href = '/';
       }
     });
 
-    // Cleanup function
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
+    window.location.href = '/';
   };
 
   return (
@@ -83,10 +68,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

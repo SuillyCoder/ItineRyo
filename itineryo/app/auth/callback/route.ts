@@ -1,4 +1,3 @@
-// app/auth/callback/route.ts
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -6,7 +5,9 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/dashboard';
+  const next = requestUrl.searchParams.get('next') || '/';
+
+  console.log('🔄 Callback received with code:', code ? 'YES' : 'NO');
 
   if (code) {
     const cookieStore = await cookies();
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
                 cookieStore.set(name, value, options);
               });
             } catch (error) {
-              console.error('Error setting cookies:', error);
+              console.error('❌ Error setting cookies:', error);
             }
           },
         },
@@ -35,13 +36,13 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error && data?.session) {
-      // Successfully exchanged code for session
+      console.log('✅ Session created for:', data.session.user.email);
       return NextResponse.redirect(new URL(next, requestUrl.origin));
     } else {
-      console.error('Auth error:', error);
+      console.error('❌ Auth exchange error:', error);
     }
   }
 
-  // Return to home page if there's an error
+  console.log('⚠️ No code or error occurred, redirecting to home');
   return NextResponse.redirect(new URL('/', requestUrl.origin));
 }

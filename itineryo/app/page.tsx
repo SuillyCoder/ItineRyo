@@ -24,22 +24,6 @@ export default function HomePage() {
   const [loadingTrips, setLoadingTrips] = useState(true);
   const router = useRouter();
 
-  // Show login page if not authenticated
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
   // Load prefectures and trips
   useEffect(() => {
     if (user) {
@@ -81,6 +65,10 @@ export default function HomePage() {
   };
 
   const handleCreateTrip = async (tripData: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    if (!user) {
+    console.error('No user found');
+    return; // ✅ Early return if no user
+  }
     const { data, error } = await supabase
       .from('trips')
       .insert([
@@ -143,6 +131,22 @@ export default function HomePage() {
   const handleOpenTrip = (tripId: string) => {
     router.push(`/trip/${tripId}`);
   };
+
+    if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
