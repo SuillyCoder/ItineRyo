@@ -16,21 +16,22 @@ interface Prefecture {
 }
 
 export default function HomePage() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [prefectures, setPrefectures] = useState<Prefecture[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-  const [loadingTrips, setLoadingTrips] = useState(true);
+  const [loadingTrips, setLoadingTrips] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const router = useRouter();
 
-  // Load prefectures and trips
+  // Load prefectures and trips when user is available
   useEffect(() => {
-    if (user) {
+    if (user && !initialLoadComplete) {
       loadPrefectures();
       loadTrips();
     }
-  }, [user]);
+  }, [user, initialLoadComplete]);
 
   const loadPrefectures = async () => {
     const { data, error } = await supabase
@@ -46,6 +47,8 @@ export default function HomePage() {
   };
 
   const loadTrips = async () => {
+    if (!user?.id) return;
+    
     setLoadingTrips(true);
     const { data, error } = await supabase
       .from('trips')
@@ -53,7 +56,7 @@ export default function HomePage() {
         *,
         prefectures (name, name_jp)
       `)
-      .eq('user_id', user?.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -62,13 +65,15 @@ export default function HomePage() {
       setTrips(data || []);
     }
     setLoadingTrips(false);
+    setInitialLoadComplete(true);
   };
 
   const handleCreateTrip = async (tripData: Omit<Trip, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) {
-    console.error('No user found');
-    return; // ✅ Early return if no user
-  }
+      console.error('No user found');
+      return;
+    }
+    
     const { data, error } = await supabase
       .from('trips')
       .insert([
@@ -132,9 +137,10 @@ export default function HomePage() {
     router.push(`/trip/${tripId}`);
   };
 
-    if (loading) {
+  // Show loading ONLY during initial auth check
+  if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -143,11 +149,12 @@ export default function HomePage() {
     );
   }
 
+  // Show login page if no user
   if (!user) {
     return <LoginPage />;
   }
 
-
+  // Show main content (with internal loading states)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -192,7 +199,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loadingTrips ? (
+        {loadingTrips && !initialLoadComplete ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading your trips...</p>
