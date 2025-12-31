@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -37,7 +39,10 @@ export async function GET(request: Request) {
     
     if (!error && data?.session) {
       console.log('✅ Session created for:', data.session.user.email);
-      return NextResponse.redirect(new URL(next, requestUrl.origin));
+
+      const response = NextResponse.redirect(new URL(next, requestUrl.origin));
+      response.headers.set('Cache-Control', 'no-store, max-age=0');
+      return response
     } else {
       console.error('❌ Auth exchange error:', error);
     }
