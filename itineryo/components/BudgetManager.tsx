@@ -199,7 +199,7 @@ export default function BudgetManager({
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
+            <div className="bg-linear-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-purple-700 font-medium">Avg per Day</span>
                 <TrendingUp className="w-5 h-5 text-purple-600" />
@@ -212,7 +212,7 @@ export default function BudgetManager({
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-200">
+            <div className="bg-linear-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-green-700 font-medium">Activities</span>
                 <Calendar className="w-5 h-5 text-green-600" />
@@ -267,7 +267,7 @@ export default function BudgetManager({
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                <div className="h-75 flex items-center justify-center text-gray-500">
                   <div className="text-center">
                     <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -285,7 +285,7 @@ export default function BudgetManager({
               <h3 className="text-lg font-bold text-gray-900 mb-4">Category Details</h3>
               
               {categoryBreakdown.length > 0 ? (
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                <div className="space-y-3 max-h-75 overflow-y-auto">
                   {categoryBreakdown.map((item) => (
                     <div 
                       key={item.category}
