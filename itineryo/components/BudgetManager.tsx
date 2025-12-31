@@ -140,7 +140,7 @@ export default function BudgetManager({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white rounded-t-2xl">
+        <div className="bg-linear-to-r from-green-500 to-emerald-600 p-6 text-white rounded-t-2xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Wallet className="w-8 h-8" />
@@ -186,7 +186,7 @@ export default function BudgetManager({
         <div className="flex-1 overflow-y-auto p-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-200">
+            <div className="bg-linear-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-blue-700 font-medium">Total Budget</span>
                 <DollarSign className="w-5 h-5 text-blue-600" />
