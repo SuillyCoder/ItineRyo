@@ -142,7 +142,7 @@ export default function HomePage() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -158,13 +158,13 @@ export default function HomePage() {
 
   // Show main content
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -236,7 +236,7 @@ export default function HomePage() {
 function EmptyState({ onCreateTrip }: { onCreateTrip: () => void }) {
   return (
     <div className="text-center py-20">
-      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
         <MapPin className="w-10 h-10 text-white" />
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">
@@ -285,7 +285,7 @@ function TripList({
             key={trip.id}
             className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow border border-gray-200 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+            <div className="bg-linear-to-r from-blue-500 to-purple-600 p-4">
               <h3 className="text-xl font-bold text-white mb-1">{trip.trip_name}</h3>
               {trip.prefectures && (
                 <p className="text-blue-100 text-sm flex items-center">
