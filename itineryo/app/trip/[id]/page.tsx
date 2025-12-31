@@ -13,6 +13,7 @@ import {
   Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon
 } from 'lucide-react';
 import PlaceSearch from '@/components/PlaceSearch';
+import BudgetManager from '@/components/BudgetManager';
 
 import Link from 'next/link';
 
@@ -515,32 +516,13 @@ const handleSelectPlace = (place: any) => {
         />
       )}
 
-      
-
-      {showBudgetManager && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowBudgetManager(false)}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8" onClick={(e) => e.stopPropagation()}>
-          <div className="text-center">
-            <Wallet className="w-16 h-16 mx-auto text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Budget Management</h2>
-            <p className="text-gray-600 mb-6">
-              Track your trip expenses and manage your budget
-            </p>
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
-              <p className="text-blue-900 font-medium">🚧 Coming Soon!</p>
-              <p className="text-blue-700 text-sm mt-2">
-                We're working on this feature. Stay tuned!
-              </p>
-            </div>
-            <button
-              onClick={() => setShowBudgetManager(false)}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
+    {showBudgetManager && trip && (
+        <BudgetManager
+        tripId={trip.id}
+        activities={days.flatMap(d => d.activities)}
+        tripDuration={days.length}
+        onClose={() => setShowBudgetManager(false)}
+      />
     )}
 
     </div>
