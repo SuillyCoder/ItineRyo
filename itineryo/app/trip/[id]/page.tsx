@@ -10,10 +10,11 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase, Trip, Activity } from '@/lib/supabase';
 import { 
   ArrowLeft, Plus, MapPin, Calendar, Clock, DollarSign, 
-  Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon
+  Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon, Route, Hotel, ArrowRightFromLine
 } from 'lucide-react';
 import PlaceSearch from '@/components/PlaceSearch';
 import BudgetManager from '@/components/BudgetManager';
+import HotelOrigin from '@/components/HotelOrigin';
 
 import Link from 'next/link';
 
@@ -28,6 +29,7 @@ const ACTIVITY_CATEGORIES = [
   { value: 'entertainment', label: 'Entertainment', icon: '🎪', color: 'bg-indigo-100 text-indigo-700' },
   { value: 'other', label: 'Other', icon: '📌', color: 'bg-gray-100 text-gray-700' },
 ];
+
 
 interface DayData {
   dayNumber: number;
@@ -51,6 +53,18 @@ export default function TripDetailPage() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showPlaceSearch, setShowPlaceSearch] = useState(false);
   const [showBudgetManager, setShowBudgetManager] = useState(false);
+  const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
+  const [showHotelOrigin, setShowHotelOrigin] = useState(false);
+  const [showExportTrip, setShowExportTrip] = useState(false);
+
+  //Hotel Origin Setters
+const [hotelOrigin, setHotelOrigin] = useState<{
+  place_id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+} | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && params.id) {
@@ -77,6 +91,9 @@ export default function TripDetailPage() {
       if (tripError) throw tripError;
       if (!tripData) throw new Error('Trip not found');
       setTrip(tripData);
+          if (tripData.hotel_origin) {
+          setHotelOrigin(tripData.hotel_origin);
+      }
 
       const { data: activitiesData, error: activitiesError } = await supabase
         .from('activities')
@@ -348,6 +365,29 @@ const handleSelectPlace = (place: any) => {
 
   const currentDay = days.find(d => d.dayNumber === selectedDay);
 
+ const handleSelectHotel = async (hotel: {
+  place_id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}) => {
+  setHotelOrigin(hotel);
+  
+  // Save to database
+  if (trip) {
+    const { error } = await supabase
+      .from('trips')
+      .update({ hotel_origin: hotel })
+      .eq('id', trip.id);
+    
+    if (error) {
+      console.error('Error saving hotel:', error);
+      alert('Failed to save hotel');
+    }
+  }
+};
+
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
@@ -362,7 +402,12 @@ const handleSelectPlace = (place: any) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{trip.trip_name}</h1>
-                {trip.prefectures && <p className="text-sm text-gray-500">{trip.prefectures.name}</p>}
+                {hotelOrigin && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                      <Hotel className="w-4 h-4" />
+                      <span>Staying at: {hotelOrigin.name}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -375,21 +420,48 @@ const handleSelectPlace = (place: any) => {
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
     <div className="flex gap-3">
       <button
+          onClick={() => setShowHotelOrigin(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-sky-300 to-sky-600 text-white rounded-lg hover:from-sky-400 hover:to-sky-700 transition-all shadow-md"
+        >
+
+        <Hotel className="w-5 h-5" />
+        <span className="font-medium">Add Hotel Origin</span>
+        </button>
+
+      <button
         onClick={() => setShowPlaceSearch(true)}
         className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all shadow-md"
       >
         <MapIcon className="w-5 h-5" />
         <span className="font-medium">Search Places</span>
-      </button>
+        </button>
       
-      <button
-        onClick={() => setShowBudgetManager(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md"
-      >
+        <button
+          onClick={() => setShowBudgetManager(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md"
+        >
+
         <Wallet className="w-5 h-5" />
         <span className="font-medium">Budget Management</span>
-        <span className="px-2 py-0.5 bg-white bg-opacity-20 rounded text-xs">Coming Soon</span>
-      </button>
+        </button>
+
+        <button
+          onClick={() => setShowRouteOptimizer(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-amber-300 to-orange-500 text-white rounded-lg hover:from-amber-400 hover:to-orange-600 transition-all shadow-md"
+        >
+
+        <Route className="w-5 h-5" />
+        <span className="font-medium">Route Optimizer</span>
+        </button>
+
+        <button
+          onClick={() => setShowExportTrip(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-400 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-800 transition-all shadow-md"
+        >
+
+        <ArrowRightFromLine className="w-5 h-5" />
+        <span className="font-medium">Export Itinerary</span>
+        </button>
     </div>
   </div>
 </div>
@@ -524,6 +596,46 @@ const handleSelectPlace = (place: any) => {
         onClose={() => setShowBudgetManager(false)}
       />
     )}
+
+    {showHotelOrigin && (
+      <HotelOrigin
+        prefectureName={trip.prefectures?.name || 'Tokyo'}
+        currentHotel={hotelOrigin}
+        onClose={() => setShowHotelOrigin(false)}
+        onSelectHotel={handleSelectHotel}
+      />
+    )}
+    
+    {showExportTrip && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <button
+            onClick={() => setShowExportTrip(false)}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="text-xl font-bold mb-4">Exporting Trip</h2>
+          <p className="text-gray-600">Feature under development.</p>
+        </div>
+      </div>
+    )}
+
+    {showRouteOptimizer && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <button
+            onClick={() => setShowRouteOptimizer(false)}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="text-xl font-bold mb-4">Optimizing Route</h2>
+          <p className="text-gray-600">Feature under development.</p>
+        </div>
+      </div>
+    )}
+    
 
     </div>
   );
