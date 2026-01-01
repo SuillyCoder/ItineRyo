@@ -116,8 +116,15 @@ export default function PlaceSearch({
   const handlePlaceClick = (place: PlaceResult) => {
     if (!placesService) return;
 
+    // Ensure we have a valid place_id (PlaceResult.place_id can be undefined)
+    const pid = place.place_id;
+    if (!pid) {
+      console.warn('handlePlaceClick: selected place has no place_id, aborting');
+      return;
+    }
+
     const request: google.maps.places.PlaceDetailsRequest = {
-      placeId: place.place_id,
+      placeId: pid,
       fields: [
         'name', 'formatted_address', 'geometry', 'rating', 'user_ratings_total',
         'price_level', 'photos', 'formatted_phone_number', 'website', 'reviews',
