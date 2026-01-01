@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, MapPin, Calendar, Users, Edit, Trash2, ChevronRight, LogOut, Settings } from 'lucide-react';
+import { Plus, MapPin, Calendar, Users, Edit, Trash2, ChevronRight, LogOut, Settings, Star } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { LoginPage } from '@/components/LoginPage';
+import ViewWishlist from '@/components/ViewWishlist';
 import { supabase, Trip } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ export default function HomePage() {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [loadingTrips, setLoadingTrips] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [showViewWishlist, setShowViewWishlist] = useState(false);
   const router = useRouter();
 
   // Load prefectures and trips when user is available
@@ -189,6 +191,13 @@ export default function HomePage() {
                 <span className="font-medium">Create New Trip</span>
               </button>
               <button
+  onClick={() => setShowViewWishlist(true)}
+  className="flex items-center space-x-2 text-gray-600 hover:text-fuchsia-600 px-3 py-2"
+>
+  <Star className="w-5 h-5" />
+  <span className="font-medium">Wishlist</span>
+</button>
+              <button
                 onClick={signOut}
                 className="flex items-center space-x-2 text-red-600 hover:text-red-700 px-3 py-2"
               >
@@ -228,6 +237,13 @@ export default function HomePage() {
           prefectures={prefectures}
         />
       )}
+
+      {/* View Wishlist Modal */}
+{showViewWishlist && (
+  <ViewWishlist
+    onClose={() => setShowViewWishlist(false)}
+  />
+)}
     </div>
   );
 }

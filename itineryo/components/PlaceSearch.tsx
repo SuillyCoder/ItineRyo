@@ -5,7 +5,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, MapPin, Star, DollarSign, Clock, Phone, Globe, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Search, X, MapPin, Star, DollarSign, Clock, Phone, Globe, Image as ImageIcon, Loader2, Heart } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider'; // Add this import
+import {supabase} from '@/lib/supabase';
 
 // ✅ FIXED: Use Google Maps native types directly
 type PlaceResult = google.maps.places.PlaceResult;
@@ -49,6 +51,9 @@ export default function PlaceSearch({
     'Nara': { lat: 34.6851, lng: 135.8048 },
   };
 
+  const { user } = useAuth();
+  const [wishlistedPlaces, setWishlistedPlaces] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (!mapRef.current || typeof google === 'undefined') return;
 
@@ -87,6 +92,22 @@ export default function PlaceSearch({
       setLoadingRecommendations(false);
     });
   };
+
+  const loadWishlistedPlaces = async () => {
+  if (!user) return;
+  
+  try {
+    const { data, error } = await supabase
+      .from('wishlist')
+      .select('place_id')
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+    setWishlistedPlaces(new Set(data?.map(item => item.place_id) || []));
+  } catch (error) {
+    console.error('Error loading wishlisted places:', error);
+  }
+};
 
   const handleSearch = () => {
     if (!placesService || !searchQuery.trim()) return;
@@ -149,6 +170,56 @@ export default function PlaceSearch({
       }
     });
   };
+
+  const handleToggleWishlist = async (place: PlaceResult, e: React.MouseEvent) => {
+  e.stopPropagation();
+  
+  if (!user || !place.place_id) return;
+  
+  const isWishlisted = wishlistedPlaces.has(place.place_id);
+  
+  try {
+    if (isWishlisted) {
+      // Remove from wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('place_id', place.place_id);
+      
+      if (error) throw error;
+      
+      const newWishlisted = new Set(wishlistedPlaces);
+      newWishlisted.delete(place.place_id);
+      setWishlistedPlaces(newWishlisted);
+    } else {
+      // Add to wishlist
+      const { error } = await supabase
+        .from('wishlist')
+        .insert([{
+          user_id: user.id,
+          place_id: place.place_id,
+          place_name: place.name || '',
+          address: place.formatted_address || null,
+          latitude: place.geometry?.location?.lat() || null,
+          longitude: place.geometry?.location?.lng() || null,
+          rating: place.rating || null,
+          price_level: place.price_level || null,
+          photo_url: place.photos?.[0] ? getPhotoUrl(place.photos[0]) : null,
+          types: place.types || null,
+        }]);
+      
+      if (error) throw error;
+      
+      const newWishlisted = new Set(wishlistedPlaces);
+      newWishlisted.add(place.place_id);
+      setWishlistedPlaces(newWishlisted);
+    }
+  } catch (error) {
+    console.error('Error toggling wishlist:', error);
+    alert('Failed to update wishlist');
+  }
+};
 
   // ✅ FIXED: Proper photo URL generation
   const getPhotoUrl = (photo: PlacePhoto) => {
@@ -267,46 +338,60 @@ export default function PlaceSearch({
               ) : (
                 displayedPlaces.map((place) => (
                   <button
-                    key={place.place_id}
-                    onClick={() => handlePlaceClick(place)}
-                    className="w-full text-left bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
-                  >
-                    <div className="flex gap-3">
-                      {place.photos && place.photos[0] ? (
-                        <img
-                          src={getPhotoUrl(place.photos[0])}
-                          alt={place.name}
-                          className="w-20 h-20 object-cover rounded-lg shrink-0"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                          <ImageIcon className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )}
+  key={place.place_id}
+  onClick={() => handlePlaceClick(place)}
+  className="w-full text-left bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all relative"
+>
+  {/* Wishlist button - top right */}
+  <button
+    onClick={(e) => handleToggleWishlist(place, e)}
+    className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
+      wishlistedPlaces.has(place.place_id || '')
+        ? 'bg-red-500 text-white hover:bg-red-600'
+        : 'bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-300'
+    }`}
+  >
+    <Heart 
+      className={`w-5 h-5 ${wishlistedPlaces.has(place.place_id || '') ? 'fill-current' : ''}`}
+    />
+  </button>
 
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 truncate">{place.name}</h3>
-                        <p className="text-sm text-gray-600 truncate mt-1">
-                          <MapPin className="w-3 h-3 inline mr-1" />
-                          {place.formatted_address}
-                        </p>
-                        <div className="flex items-center gap-3 mt-2">
-                          {place.rating && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                              <span className="font-medium">{place.rating}</span>
-                              <span className="text-gray-500">({place.user_ratings_total})</span>
-                            </div>
-                          )}
-                          {place.price_level && (
-                            <div className="text-sm text-green-600 font-medium">
-                              {getPriceLevel(place.price_level)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
+  <div className="flex gap-3">
+    {place.photos && place.photos[0] ? (
+      <img
+        src={getPhotoUrl(place.photos[0])}
+        alt={place.name}
+        className="w-20 h-20 object-cover rounded-lg shrink-0"
+      />
+    ) : (
+      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
+        <ImageIcon className="w-8 h-8 text-gray-400" />
+      </div>
+    )}
+
+    <div className="flex-1 min-w-0 pr-8">
+      <h3 className="font-bold text-gray-900 truncate">{place.name}</h3>
+      <p className="text-sm text-gray-600 truncate mt-1">
+        <MapPin className="w-3 h-3 inline mr-1" />
+        {place.formatted_address}
+      </p>
+      <div className="flex items-center gap-3 mt-2">
+        {place.rating && (
+          <div className="flex items-center gap-1 text-sm">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <span className="font-medium">{place.rating}</span>
+            <span className="text-gray-500">({place.user_ratings_total})</span>
+          </div>
+        )}
+        {place.price_level && (
+          <div className="text-sm text-green-600 font-medium">
+            {getPriceLevel(place.price_level)}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</button>
                 ))
               )}
             </div>
@@ -410,6 +495,7 @@ export default function PlaceSearch({
                     >
                       Add to Itinerary
                     </button>
+                    
                   )}
 
                   {selectedPlace.reviews && selectedPlace.reviews.length > 0 && (

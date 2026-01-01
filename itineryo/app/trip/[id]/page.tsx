@@ -17,6 +17,8 @@ import BudgetManager from '@/components/BudgetManager';
 import HotelOrigin from '@/components/HotelOrigin';
 import RouteOptimizer from '@/components/RouteOptimizer';
 import ExportItinerary from '@/components/ExportItinerary';
+import MapOverview from '@/components/MapOverview';
+import ViewWishlist from '@/components/ViewWishlist';
 
 import Link from 'next/link';
 
@@ -663,37 +665,35 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
   />
 )}
 
-    {showMapView && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-          <button
-            onClick={() => setShowMapView(false)}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <h2 className="text-xl font-bold mb-4">Geospatial Map View</h2>
-          <p className="text-gray-600">Feature under development.</p>
-        </div>
-      </div>
-    )}
+{showMapView && (
+  <MapOverview
+    days={days}
+    selectedDay={selectedDay}
+    hotelOrigin={hotelOrigin}
+    onClose={() => setShowMapView(false)}
+  />
+)}
 
 
-   {showViewWishlist && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-          <button
-            onClick={() => setShowViewWishlist(false)}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <h2 className="text-xl font-bold mb-4">Viewing Place Wishlist</h2>
-          <p className="text-gray-600">Feature under development.</p>
-        </div>
-      </div>
-    )}
-
+ {showViewWishlist && (
+  <ViewWishlist
+    onClose={() => setShowViewWishlist(false)}
+    onAddToItinerary={(wishlistItem) => {
+      // Convert wishlist item to activity format
+      const activityData: Partial<Activity> = {
+        activity_name: wishlistItem.place_name,
+        address: wishlistItem.address || '',
+        latitude: wishlistItem.latitude,
+        longitude: wishlistItem.longitude,
+        place_id: wishlistItem.place_id,
+        category: 'attractions',
+      };
+      
+      setEditingActivity(activityData as any);
+      setShowActivityModal(true);
+    }}
+  />
+)}
 
   {showRouteOptimizer && (
       <RouteOptimizer

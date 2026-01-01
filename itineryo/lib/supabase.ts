@@ -46,3 +46,18 @@ export interface Activity {
   created_at: string;
   updated_at: string;
 }
+
+export interface WishlistItem {
+  id: string;
+  user_id: string;
+  place_id: string;
+  place_name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  rating: number | null;
+  price_level: number | null;
+  photo_url: string | null;
+  types: string[] | null;
+  created_at: string;
+}
