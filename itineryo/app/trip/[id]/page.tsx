@@ -15,6 +15,7 @@ import {
 import PlaceSearch from '@/components/PlaceSearch';
 import BudgetManager from '@/components/BudgetManager';
 import HotelOrigin from '@/components/HotelOrigin';
+import RouteOptimizer from '@/components/RouteOptimizer';
 
 import Link from 'next/link';
 
@@ -335,6 +336,30 @@ const handleSelectPlace = (place: any) => {
   setShowActivityModal(true);
 };
 
+const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>) => {
+  try {
+    // Update each day's activities with optimized order
+    for (const [dayNumber, activities] of optimizedActivities.entries()) {
+      // Update order_index for each activity
+      const updates = activities.map((activity, idx) =>
+        supabase
+          .from('activities')
+          .update({ order_index: idx })
+          .eq('id', activity.id)
+      );
+
+      await Promise.all(updates);
+    }
+
+    // Reload trip data to reflect changes
+    await loadTripData();
+    alert('Route optimized successfully!');
+  } catch (error) {
+    console.error('Error saving optimized route:', error);
+    alert('Failed to save optimized route');
+  }
+};
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
@@ -621,19 +646,14 @@ const handleSelectPlace = (place: any) => {
       </div>
     )}
 
-    {showRouteOptimizer && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-          <button
-            onClick={() => setShowRouteOptimizer(false)}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <h2 className="text-xl font-bold mb-4">Optimizing Route</h2>
-          <p className="text-gray-600">Feature under development.</p>
-        </div>
-      </div>
+  {showRouteOptimizer && (
+      <RouteOptimizer
+        days={days}
+        selectedDay={selectedDay}
+        hotelOrigin={hotelOrigin}
+        onClose={() => setShowRouteOptimizer(false)}
+        onOptimize={handleOptimizeRoute}
+      />
     )}
     
 
