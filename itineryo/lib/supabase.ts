@@ -37,7 +37,7 @@ export interface Activity {
   estimated_duration: number | null;
   estimated_cost: number | null;
   actual_cost: number | null;
-  category: string | null;
+  category: string | ' ';
   latitude: number | null;
   longitude: number | null;
   address: string | null;
