@@ -121,7 +121,7 @@ export default function BudgetManager({
   const pieChartData = categoryBreakdown.map(item => ({
     name: CATEGORY_LABELS[item.category] || item.category,
     value: item.amount,
-    category: item.category,
+    category: item.category
   }));
 
   const formatCurrency = (amount: number) => {
@@ -248,7 +248,7 @@ export default function BudgetManager({
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${typeof percent === 'number' ? Math.round(percent * 100) + '%' : ''}`}
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
@@ -260,8 +260,8 @@ export default function BudgetManager({
                         />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
+                    <Tooltip
+                      formatter={(value?: number) => (value == null ? '' : formatCurrency(value))}
                     />
                     <Legend />
                   </PieChart>
