@@ -10,7 +10,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase, Trip, Activity } from '@/lib/supabase';
 import { 
   ArrowLeft, Plus, MapPin, Calendar, Clock, DollarSign, 
-  Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon, Route, Hotel, ArrowRightFromLine
+  Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon, Route, Hotel, ArrowRightFromLine, Star, MapPinned
 } from 'lucide-react';
 import PlaceSearch from '@/components/PlaceSearch';
 import BudgetManager from '@/components/BudgetManager';
@@ -57,6 +57,8 @@ export default function TripDetailPage() {
   const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
   const [showHotelOrigin, setShowHotelOrigin] = useState(false);
   const [showExportTrip, setShowExportTrip] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
+  const [showViewWishlist, setShowViewWishlist] = useState(false);
 
   //Hotel Origin Setters
 const [hotelOrigin, setHotelOrigin] = useState<{
@@ -457,7 +459,7 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
         onClick={() => setShowPlaceSearch(true)}
         className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all shadow-md"
       >
-        <MapIcon className="w-5 h-5" />
+        <MapPinned className="w-5 h-5" />
         <span className="font-medium">Search Places</span>
         </button>
       
@@ -480,6 +482,16 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
         </button>
 
         <button
+          onClick={() => setShowMapView(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-300 to-teal-500 text-white rounded-lg hover:from-emerald-400 hover:to-teal-600 transition-all shadow-md"
+        >
+
+        <MapIcon className="w-5 h-5" />
+        <span className="font-medium">Map View</span>
+        </button>
+
+
+        <button
           onClick={() => setShowExportTrip(true)}
           className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-400 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-800 transition-all shadow-md"
         >
@@ -487,6 +499,17 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
         <ArrowRightFromLine className="w-5 h-5" />
         <span className="font-medium">Export Itinerary</span>
         </button>
+
+        <button
+          onClick={() => setShowViewWishlist(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-fuchsia-400 to-fuchsia-600 text-white rounded-lg hover:from-fuchsia-500 hover:to-fuchsia-700 transition-all shadow-md"
+        >
+
+        <Star className="w-5 h-5" />
+        <span className="font-medium">View Wishlist</span>
+        </button>
+
+
     </div>
   </div>
 </div>
@@ -645,6 +668,38 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
         </div>
       </div>
     )}
+
+    {showMapView && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <button
+            onClick={() => setShowMapView(false)}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="text-xl font-bold mb-4">Geospatial Map View</h2>
+          <p className="text-gray-600">Feature under development.</p>
+        </div>
+      </div>
+    )}
+
+
+   {showViewWishlist && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <button
+            onClick={() => setShowViewWishlist(false)}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="text-xl font-bold mb-4">Viewing Place Wishlist</h2>
+          <p className="text-gray-600">Feature under development.</p>
+        </div>
+      </div>
+    )}
+
 
   {showRouteOptimizer && (
       <RouteOptimizer
