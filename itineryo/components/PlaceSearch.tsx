@@ -255,7 +255,7 @@ export default function PlaceSearch({
   const displayedPlaces = activeTab === 'recommendations' ? recommendations : searchResults;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div 
         className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -337,11 +337,14 @@ export default function PlaceSearch({
                 </div>
               ) : (
                 displayedPlaces.map((place) => (
-                  <button
-  key={place.place_id}
-  onClick={() => handlePlaceClick(place)}
-  className="w-full text-left bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all relative"
->
+                  <div
+    key={place.place_id || place.name}
+    role="button"
+    tabIndex={0}
+    onClick={() => handlePlaceClick(place)}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlaceClick(place); } }}
+    className="w-full text-left bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all relative"
+  >
   {/* Wishlist button - top right */}
   <button
     onClick={(e) => handleToggleWishlist(place, e)}
@@ -350,6 +353,8 @@ export default function PlaceSearch({
         ? 'bg-red-500 text-white hover:bg-red-600'
         : 'bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-300'
     }`}
+    aria-pressed={wishlistedPlaces.has(place.place_id || '')}
+    aria-label={wishlistedPlaces.has(place.place_id || '') ? 'Remove from wishlist' : 'Add to wishlist'}
   >
     <Heart 
       className={`w-5 h-5 ${wishlistedPlaces.has(place.place_id || '') ? 'fill-current' : ''}`}
@@ -391,7 +396,7 @@ export default function PlaceSearch({
       </div>
     </div>
   </div>
-</button>
+</div>
                 ))
               )}
             </div>

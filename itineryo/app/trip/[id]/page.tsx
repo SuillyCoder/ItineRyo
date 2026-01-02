@@ -62,6 +62,7 @@ export default function TripDetailPage() {
   const [showExportTrip, setShowExportTrip] = useState(false);
   const [showMapView, setShowMapView] = useState(false);
   const [showViewWishlist, setShowViewWishlist] = useState(false);
+  const [prefilledActivityData, setPrefilledActivityData] = useState<Partial<Activity> | null>(null);
 
   //Hotel Origin Setters
 const [hotelOrigin, setHotelOrigin] = useState<{
@@ -337,7 +338,8 @@ const handleSelectPlace = (place: any) => {
   };
   
   // Open activity modal with pre-filled data
-  setEditingActivity(activityData as any);
+  setEditingActivity(null);
+  setPrefilledActivityData(activityData);
   setShowActivityModal(true);
 };
 
@@ -621,11 +623,12 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
 
       {showActivityModal && (
         <ActivityModal
-          activity={editingActivity}
+          activity={editingActivity || prefilledActivityData}
           dayNumber={selectedDay}
           onClose={() => {
             setShowActivityModal(false);
             setEditingActivity(null);
+            setPrefilledActivityData(null); // ✅ Clear prefilled data
           }}
           onSave={editingActivity ? handleUpdateActivity : handleCreateActivity}
         />
@@ -807,7 +810,8 @@ function ActivityCard({
 }
 
 function ActivityModal({ activity, dayNumber, onClose, onSave }: {
-  activity: Activity | null;
+  // activity can be a full Activity when editing, or a Partial<Activity> when prefilled
+  activity: Partial<Activity> | null;
   dayNumber: number;
   onClose: () => void;
   onSave: (data: Partial<Activity>) => void;
@@ -824,6 +828,23 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
     longitude: activity?.longitude || null,
     place_id: activity?.place_id || null,
   });
+
+  useEffect(() => {
+  if (activity) {
+    setFormData({
+      activity_name: activity.activity_name || '',
+      category: activity.category || 'other',
+      address: activity.address || '',
+      scheduled_time: activity.scheduled_time || '',
+      estimated_duration: activity.estimated_duration || null,
+      estimated_cost: activity.estimated_cost || null,
+      notes: activity.notes || '',
+      latitude: activity.latitude || null,
+      longitude: activity.longitude || null,
+      place_id: activity.place_id || null,
+    });
+  }
+}, [activity]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);

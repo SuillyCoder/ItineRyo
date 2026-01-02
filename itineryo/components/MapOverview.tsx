@@ -380,7 +380,7 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
   };
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${isFullscreen ? 'p-0' : ''}`}>
+    <div className={`fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50 p-4 ${isFullscreen ? 'p-0' : ''}`}>
       <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden ${isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-6xl h-[90vh]'}`}>
         {/* Header */}
         <div className="bg-linear-to-r from-emerald-400 to-teal-600 p-4 text-white">
