@@ -4,7 +4,7 @@
 // ============================================
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { X, Navigation, Maximize2, Minimize2, MapPin, Clock } from 'lucide-react';
 import { Activity } from '@/lib/supabase';
 
@@ -43,9 +43,11 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
   } | null>(null);
 
   const currentDayData = days.find(d => d.dayNumber === currentDay);
-  const activitiesWithLocation = currentDayData?.activities.filter(
-    a => a.latitude && a.longitude
+  const activitiesWithLocation = useMemo(() => {
+    return currentDayData?.activities.filter(
+      a => a.latitude && a.longitude
   ) || [];
+}, [currentDay, days]);
 
   useEffect(() => {
     if (!mapRef.current || typeof google === 'undefined') return;
@@ -283,13 +285,18 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
             stopover: true,
           }));
 
-        const result = await directionsService.route({
-          origin,
-          destination,
-          waypoints,
-          travelMode: google.maps.TravelMode.TRANSIT, // Can be WALKING, DRIVING, or TRANSIT
-          optimizeWaypoints: false, // Keep original order
-        });
+        // TRANSIT mode only supports 2 waypoints, so use WALKING or DRIVING for multiple stops
+      const travelMode = activitiesWithLocation.length > 2 
+        ? google.maps.TravelMode.WALKING  // Use WALKING for multiple stops
+        : google.maps.TravelMode.TRANSIT; // Use TRANSIT only for 2 locations
+
+      const result = await directionsService.route({
+        origin,
+        destination,
+        waypoints: travelMode === google.maps.TravelMode.WALKING ? waypoints : [], // No waypoints for TRANSIT
+        travelMode,
+        optimizeWaypoints: false,
+      });
 
         if (directionsRendererRef.current) {
           directionsRendererRef.current.setDirections(result);
