@@ -69,7 +69,7 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
       map: map,
       suppressMarkers: true, // We'll add custom markers
       polylineOptions: {
-        strokeColor: '#3B82F6',
+        strokeColor: '#47a69b',
         strokeWeight: 4,
         strokeOpacity: 0.7,
       },
@@ -173,7 +173,7 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 15,
-          fillColor: '#3B82F6',
+          fillColor: '#47a69b',
           fillOpacity: 1,
           strokeColor: '#ffffff',
           strokeWeight: 3,
@@ -380,16 +380,35 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
   };
 
   return (
-    <div className={`fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50 p-4 ${isFullscreen ? 'p-0' : ''}`}>
-      <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden ${isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-6xl h-[90vh]'}`}>
+    <div 
+      className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${isFullscreen ? 'p-0' : ''}`}
+      style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }}
+    >      
+    <div 
+      className={`rounded-2xl shadow-2xl overflow-hidden ${isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-6xl h-[90vh]'}`}
+      style={{ backgroundColor: '#D5D0C0' }}
+    >
         {/* Header */}
-        <div className="bg-linear-to-r from-emerald-400 to-teal-600 p-4 text-white">
+        <div className="relative overflow-hidden p-4 text-white" style={{ background: 'linear-gradient(to right, #47a69b, #5cb3a9)' }}>
+  <div className="absolute inset-0 opacity-5">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
+          </div>
+  
+  <div className="relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <MapPin className="w-6 h-6" />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#63cfc2' }}>
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
               <div>
                 <h2 className="text-xl font-bold">Map Overview</h2>
-                <p className="text-sm text-emerald-100">
+                <p className="text-sm text-white opacity-90">
                   {currentDayData?.date.toLocaleDateString('en-US', { 
                     weekday: 'long', month: 'long', day: 'numeric' 
                   })}
@@ -411,11 +430,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
               </button>
             </div>
           </div>
+          </div>
         </div>
 
         <div className="flex h-[calc(100%-80px)]">
           {/* Sidebar */}
-          <div className="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+          <div className="w-80 overflow-y-auto" style={{ backgroundColor: '#D5D0C0', borderRight: '1px solid rgba(125, 116, 99, 0.3)' }}>
             <div className="p-4 space-y-4">
               {/* Day selector */}
               <div>
@@ -423,7 +443,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
                 <select
                   value={currentDay}
                   onChange={(e) => setCurrentDay(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:oFutline-none"
+                  style={{ 
+                    backgroundColor: 'white',
+                    border: '1px solid rgba(125, 116, 99, 0.3)',
+                    color: '#2c2416'
+                  }}
                 >
                   {days.map(day => (
                     <option key={day.dayNumber} value={day.dayNumber}>
@@ -439,11 +464,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setMapType('roadmap')}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      mapType === 'roadmap'
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                      backgroundColor: mapType === 'roadmap' ? '#47a69b' : 'white',
+                      color: mapType === 'roadmap' ? 'white' : '#2c2416',
+                      border: mapType === 'roadmap' ? 'none' : '1px solid rgba(125, 116, 99, 0.3)'
+                    }}
                   >
                     Road Map
                   </button>
@@ -461,13 +487,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
               </div>
 
               {/* Show directions toggle */}
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                <span className="text-sm font-medium text-gray-700">Show Route</span>
+              <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'white', border: '1px solid rgba(125, 116, 99, 0.3)' }}>
+                <span className="text-sm font-medium" style={{ color: '#2c2416' }}>Show Route</span>
                 <button
                   onClick={() => setShowDirections(!showDirections)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    showDirections ? 'bg-emerald-500' : 'bg-gray-300'
-                  }`}
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                  style={{ backgroundColor: showDirections ? '#47a69b' : '#C8B8A5' }}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -479,12 +504,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
 
               {/* Route info */}
               {routeInfo && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+               <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(71, 166, 155, 0.1)', border: '1px solid rgba(71, 166, 155, 0.3)' }}>
+  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: '#2c2416' }}>
                     <Navigation className="w-4 h-4" />
                     Route Information
                   </h3>
-                  <div className="space-y-1 text-sm text-blue-800">
+                   <div className="space-y-1 text-sm" style={{ color: '#7D7463' }}>
                     <p>📏 Total Distance: {routeInfo.distance}</p>
                     <p>⏱️ Est. Travel Time: {routeInfo.duration}</p>
                   </div>
@@ -493,12 +518,12 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
 
               {/* Activities list */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                <h3 className="text-sm font-semibold mb-2" style={{ color: '#2c2416' }}>
                   Activities ({activitiesWithLocation.length})
                 </h3>
                 {activitiesWithLocation.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <MapPin className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <div className="text-center py-8" style={{ color: '#7D7463' }}>
+                    <MapPin className="w-12 h-12 mx-auto mb-2" style={{ color: '#C8B8A5' }} />
                     <p className="text-sm">No activities with locations</p>
                   </div>
                 ) : (
@@ -506,18 +531,19 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
                     {activitiesWithLocation.map((activity, index) => (
                       <div
                         key={activity.id}
-                        className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                        className="rounded-lg p-3 hover:shadow-md transition-shadow"
+                        style={{ backgroundColor: 'white', border: '1px solid rgba(125, 116, 99, 0.3)' }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <div className="flex items-start gap-3">
+                      <div className="shrink-0 w-6 h-6 text-white rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: '#47a69b' }}>
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium text-gray-900 truncate">
+                            <h4 className="text-sm font-medium truncate" style={{ color: '#2c2416' }}>
                               {activity.activity_name}
                             </h4>
                             {activity.scheduled_time && (
-                              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                              <p className="text-xs flex items-center gap-1 mt-1" style={{ color: '#7D7463' }}>
                                 <Clock className="w-3 h-3" />
                                 {activity.scheduled_time}
                               </p>
@@ -540,8 +566,8 @@ export default function MapOverview({ days, selectedDay, hotelOrigin, onClose }:
             {typeof google === 'undefined' && (
               <div className="absolute inset-0 flex items-center justify-center bg-white">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading Google Maps...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: '#47a69b' }}></div>
+                    <p style={{ color: '#7D7463' }}>Loading Google Maps...</p>
                 </div>
               </div>
             )}

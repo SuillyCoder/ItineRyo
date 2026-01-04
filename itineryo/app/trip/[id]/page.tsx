@@ -1,6 +1,6 @@
 // ============================================
 // FILE: app/trip/[id]/page.tsx
-// COMPLETE VERSION: All bugs fixed
+// Trip Details Page - Japanese Design Integration
 // ============================================
 'use client';
 
@@ -10,7 +10,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase, Trip, Activity } from '@/lib/supabase';
 import { 
   ArrowLeft, Plus, MapPin, Calendar, Clock, DollarSign, 
-  Edit, Trash2, GripVertical, X, Search, Wallet, MapIcon, Route, Hotel, ArrowRightFromLine, Star, MapPinned
+  Edit, Trash2, GripVertical, X, Search, Hotel, ArrowRightFromLine, 
+  Star, MapPinned, MapIcon, Route
 } from 'lucide-react';
 import PlaceSearch from '@/components/PlaceSearch';
 import BudgetManager from '@/components/BudgetManager';
@@ -19,21 +20,20 @@ import RouteOptimizer from '@/components/RouteOptimizer';
 import ExportItinerary from '@/components/ExportItinerary';
 import MapOverview from '@/components/MapOverview';
 import ViewWishlist from '@/components/ViewWishlist';
-
+import { LoadingPanel } from '@/components/LoadingPanel';
 import Link from 'next/link';
 
-// Activity Categories
+// Activity Categories with Japanese color scheme
 const ACTIVITY_CATEGORIES = [
-  { value: 'dining', label: 'Dining', icon: '🍽️', color: 'bg-orange-100 text-orange-700' },
-  { value: 'shopping', label: 'Shopping', icon: '🛍️', color: 'bg-pink-100 text-pink-700' },
-  { value: 'attractions', label: 'Attractions', icon: '🎭', color: 'bg-purple-100 text-purple-700' },
-  { value: 'transportation', label: 'Transportation', icon: '🚇', color: 'bg-blue-100 text-blue-700' },
-  { value: 'accommodation', label: 'Accommodation', icon: '🏨', color: 'bg-green-100 text-green-700' },
-  { value: 'parks', label: 'Parks & Nature', icon: '🌳', color: 'bg-emerald-100 text-emerald-700' },
-  { value: 'entertainment', label: 'Entertainment', icon: '🎪', color: 'bg-indigo-100 text-indigo-700' },
-  { value: 'other', label: 'Other', icon: '📌', color: 'bg-gray-100 text-gray-700' },
+  { value: 'dining', label: 'Dining', icon: '🍽️', color: 'bg-[#D64820] bg-opacity-20 text-[#D5D0C0] border-[#D64820]' },
+  { value: 'shopping', label: 'Shopping', icon: '🛍️', color: 'bg-[#C8B8A5] text-[#7D7463] border-[#7D7463]' },
+  { value: 'attractions', label: 'Attractions', icon: '🎭', color: 'bg-[#D64820] bg-opacity-20 text-[#D5D0C0] border-[#D64820]' },
+  { value: 'transportation', label: 'Transportation', icon: '🚇', color: 'bg-[#C8B8A5] text-[#7D7463] border-[#7D7463]' },
+  { value: 'accommodation', label: 'Accommodation', icon: '🏨', color: 'bg-[#D64820] bg-opacity-20 text-[#D5D0C0] border-[#D64820]' },
+  { value: 'parks', label: 'Parks & Nature', icon: '🌳', color: 'bg-[#C8B8A5] text-[#7D7463] border-[#7D7463]' },
+  { value: 'entertainment', label: 'Entertainment', icon: '🎪', color: 'bg-[#D64820] bg-opacity-20 text-[#D5D0C0] border-[#D64820]' },
+  { value: 'other', label: 'Other', icon: '📌', color: 'bg-[#C8B8A5] text-[#7D7463] border-[#7D7463]' },
 ];
-
 
 interface DayData {
   dayNumber: number;
@@ -64,14 +64,13 @@ export default function TripDetailPage() {
   const [showViewWishlist, setShowViewWishlist] = useState(false);
   const [prefilledActivityData, setPrefilledActivityData] = useState<Partial<Activity> | null>(null);
 
-  //Hotel Origin Setters
-const [hotelOrigin, setHotelOrigin] = useState<{
-  place_id: string;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-} | null>(null);
+  const [hotelOrigin, setHotelOrigin] = useState<{
+    place_id: string;
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && params.id) {
@@ -98,8 +97,8 @@ const [hotelOrigin, setHotelOrigin] = useState<{
       if (tripError) throw tripError;
       if (!tripData) throw new Error('Trip not found');
       setTrip(tripData);
-          if (tripData.hotel_origin) {
-          setHotelOrigin(tripData.hotel_origin);
+      if (tripData.hotel_origin) {
+        setHotelOrigin(tripData.hotel_origin);
       }
 
       const { data: activitiesData, error: activitiesError } = await supabase
@@ -136,34 +135,30 @@ const [hotelOrigin, setHotelOrigin] = useState<{
 
   const handleCreateActivity = async (activityData: Partial<Activity>) => {
     if (!user || !trip) return;
-
     const maxOrder = days.find(d => d.dayNumber === selectedDay)?.activities.length || 0;
 
     try {
       const { data, error } = await supabase
         .from('activities')
-        .insert([
-          {
-            trip_id: trip.id,
-            day_number: selectedDay,
-            activity_name: activityData.activity_name,
-            place_id: activityData.place_id || null,
-            scheduled_time: activityData.scheduled_time || null,
-            estimated_duration: activityData.estimated_duration || null,
-            estimated_cost: activityData.estimated_cost || null,
-            category: activityData.category,
-            latitude: activityData.latitude || null,
-            longitude: activityData.longitude || null,
-            address: activityData.address || null,
-            notes: activityData.notes || null,
-            order_index: maxOrder,
-          },
-        ])
+        .insert([{
+          trip_id: trip.id,
+          day_number: selectedDay,
+          activity_name: activityData.activity_name,
+          place_id: activityData.place_id || null,
+          scheduled_time: activityData.scheduled_time || null,
+          scheduled_end: activityData.scheduled_end || null,
+          estimated_cost: activityData.estimated_cost || null,
+          category: activityData.category,
+          latitude: activityData.latitude || null,
+          longitude: activityData.longitude || null,
+          address: activityData.address || null,
+          notes: activityData.notes || null,
+          order_index: maxOrder,
+        }])
         .select()
         .single();
 
       if (error) throw error;
-      
       await loadTripData();
       setShowActivityModal(false);
     } catch (err: any) {
@@ -174,39 +169,20 @@ const [hotelOrigin, setHotelOrigin] = useState<{
 
   const handleUpdateActivity = async (activityData: Partial<Activity>) => {
     if (!editingActivity) return;
-
     try {
-      // Create update object with only non-null values
       const updateData: any = {
         activity_name: activityData.activity_name,
         category: activityData.category,
       };
 
-      // Only include these fields if they have values
-      if (activityData.scheduled_time !== undefined) {
-        updateData.scheduled_time = activityData.scheduled_time || null;
-      }
-      if (activityData.estimated_duration !== undefined) {
-        updateData.estimated_duration = activityData.estimated_duration || null;
-      }
-      if (activityData.estimated_cost !== undefined) {
-        updateData.estimated_cost = activityData.estimated_cost || null;
-      }
-      if (activityData.latitude !== undefined) {
-        updateData.latitude = activityData.latitude || null;
-      }
-      if (activityData.longitude !== undefined) {
-        updateData.longitude = activityData.longitude || null;
-      }
-      if (activityData.address !== undefined) {
-        updateData.address = activityData.address || null;
-      }
-      if (activityData.place_id !== undefined) {
-        updateData.place_id = activityData.place_id || null;
-      }
-      if (activityData.notes !== undefined) {
-        updateData.notes = activityData.notes || null;
-      }
+      if (activityData.scheduled_time !== undefined) updateData.scheduled_time = activityData.scheduled_time || null;
+      if (activityData.scheduled_end !== undefined) updateData.scheduled_end = activityData.scheduled_end || null;
+      if (activityData.estimated_cost !== undefined) updateData.estimated_cost = activityData.estimated_cost || null;
+      if (activityData.latitude !== undefined) updateData.latitude = activityData.latitude || null;
+      if (activityData.longitude !== undefined) updateData.longitude = activityData.longitude || null;
+      if (activityData.address !== undefined) updateData.address = activityData.address || null;
+      if (activityData.place_id !== undefined) updateData.place_id = activityData.place_id || null;
+      if (activityData.notes !== undefined) updateData.notes = activityData.notes || null;
 
       const { error } = await supabase
         .from('activities')
@@ -214,7 +190,6 @@ const [hotelOrigin, setHotelOrigin] = useState<{
         .eq('id', editingActivity.id);
 
       if (error) throw error;
-      
       await loadTripData();
       setEditingActivity(null);
       setShowActivityModal(false);
@@ -226,9 +201,7 @@ const [hotelOrigin, setHotelOrigin] = useState<{
 
   const handleDeleteActivity = async (activityId: string) => {
     if (!confirm('Are you sure you want to delete this activity?')) return;
-
     const { error } = await supabase.from('activities').delete().eq('id', activityId);
-
     if (error) {
       console.error('Error deleting activity:', error);
       alert('Failed to delete activity');
@@ -255,13 +228,11 @@ const [hotelOrigin, setHotelOrigin] = useState<{
   const handleDrop = async (e: React.DragEvent, targetDayNumber: number, targetIndex: number) => {
     e.preventDefault();
     setDragOverIndex(null);
-    
     if (!draggedActivity) return;
 
     const sourceDayNumber = draggedActivity.day_number;
     const sourceIndex = draggedActivity.order_index;
 
-    // Don't do anything if dropped in same position
     if (sourceDayNumber === targetDayNumber && sourceIndex === targetIndex) {
       setDraggedActivity(null);
       return;
@@ -271,44 +242,28 @@ const [hotelOrigin, setHotelOrigin] = useState<{
       const targetDay = days.find(d => d.dayNumber === targetDayNumber);
       if (!targetDay) return;
 
-      // Build new order for target day
       let newOrder = [...targetDay.activities];
-      
-      // Remove from source if in same day
       if (sourceDayNumber === targetDayNumber) {
         newOrder = newOrder.filter(a => a.id !== draggedActivity.id);
       }
-      
-      // Insert at target position
       newOrder.splice(targetIndex, 0, draggedActivity);
 
-      // Update all activities in target day with new order
       const updates = newOrder.map((activity, idx) => 
         supabase
           .from('activities')
-          .update({ 
-            order_index: idx,
-            day_number: targetDayNumber 
-          })
+          .update({ order_index: idx, day_number: targetDayNumber })
           .eq('id', activity.id)
       );
 
       await Promise.all(updates);
 
-      // If moved to different day, reorder source day
       if (sourceDayNumber !== targetDayNumber) {
         const sourceDay = days.find(d => d.dayNumber === sourceDayNumber);
         if (sourceDay) {
-          const remainingActivities = sourceDay.activities
-            .filter(a => a.id !== draggedActivity.id);
-          
+          const remainingActivities = sourceDay.activities.filter(a => a.id !== draggedActivity.id);
           const sourceUpdates = remainingActivities.map((activity, idx) =>
-            supabase
-              .from('activities')
-              .update({ order_index: idx })
-              .eq('id', activity.id)
+            supabase.from('activities').update({ order_index: idx }).eq('id', activity.id)
           );
-          
           await Promise.all(sourceUpdates);
         }
       }
@@ -322,71 +277,71 @@ const [hotelOrigin, setHotelOrigin] = useState<{
     setDraggedActivity(null);
   };
 
-const handleSelectPlace = (place: any) => {
-  // Extract coordinates properly
-  const lat = place.geometry?.location?.lat();
-  const lng = place.geometry?.location?.lng();
-  
-  // Auto-fill activity form with place data
-  const activityData: Partial<Activity> = {
-    activity_name: place.name || '',
-    address: place.formatted_address || '',
-    latitude: lat || null,
-    longitude: lng || null,
-    place_id: place.place_id || null,
-    category: 'attractions', // Default category
+  const handleSelectPlace = (place: any) => {
+    const lat = place.geometry?.location?.lat();
+    const lng = place.geometry?.location?.lng();
+    const activityData: Partial<Activity> = {
+      activity_name: place.name || '',
+      address: place.formatted_address || '',
+      latitude: lat || null,
+      longitude: lng || null,
+      place_id: place.place_id || null,
+      category: 'attractions',
+    };
+    setEditingActivity(null);
+    setPrefilledActivityData(activityData);
+    setShowActivityModal(true);
   };
-  
-  // Open activity modal with pre-filled data
-  setEditingActivity(null);
-  setPrefilledActivityData(activityData);
-  setShowActivityModal(true);
-};
 
-const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>) => {
-  try {
-    // Update each day's activities with optimized order
-    for (const [dayNumber, activities] of optimizedActivities.entries()) {
-      // Update order_index for each activity
-      const updates = activities.map((activity, idx) =>
-        supabase
-          .from('activities')
-          .update({ order_index: idx })
-          .eq('id', activity.id)
-      );
-
-      await Promise.all(updates);
+  const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>) => {
+    try {
+      for (const [dayNumber, activities] of optimizedActivities.entries()) {
+        const updates = activities.map((activity, idx) =>
+          supabase.from('activities').update({ order_index: idx }).eq('id', activity.id)
+        );
+        await Promise.all(updates);
+      }
+      await loadTripData();
+      alert('Route optimized successfully!');
+    } catch (error) {
+      console.error('Error saving optimized route:', error);
+      alert('Failed to save optimized route');
     }
+  };
 
-    // Reload trip data to reflect changes
-    await loadTripData();
-    alert('Route optimized successfully!');
-  } catch (error) {
-    console.error('Error saving optimized route:', error);
-    alert('Failed to save optimized route');
-  }
-};
+  const handleSelectHotel = async (hotel: {
+    place_id: string;
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    setHotelOrigin(hotel);
+    if (trip) {
+      const { error } = await supabase
+        .from('trips')
+        .update({ hotel_origin: hotel })
+        .eq('id', trip.id);
+      if (error) {
+        console.error('Error saving hotel:', error);
+        alert('Failed to save hotel');
+      }
+    }
+  };
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading trip details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPanel />;
   }
 
   if (!user) return null;
 
   if (error || !trip) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#D6D0C0' }}>
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{error || 'Trip not found'}</h2>
-          <Link href="/" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mt-4">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: '#2c2416' }}>{error || 'Trip not found'}</h2>
+          <Link href="/" className="inline-flex items-center gap-2 hover:opacity-80" style={{ color: '#BF2809' }}>
             <ArrowLeft size={20} />
             Back to Trips
           </Link>
@@ -397,170 +352,133 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
 
   const currentDay = days.find(d => d.dayNumber === selectedDay);
 
- const handleSelectHotel = async (hotel: {
-  place_id: string;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-}) => {
-  setHotelOrigin(hotel);
-  
-  // Save to database
-  if (trip) {
-    const { error } = await supabase
-      .from('trips')
-      .update({ hotel_origin: hotel })
-      .eq('id', trip.id);
-    
-    if (error) {
-      console.error('Error saving hotel:', error);
-      alert('Failed to save hotel');
-    }
-  }
-};
-
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Link href="/" className="text-gray-600 hover:text-gray-900 p-2">
-                <ArrowLeft className="w-6 h-6" />
-              </Link>
-              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{trip.trip_name}</h1>
-                {hotelOrigin && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                      <Hotel className="w-4 h-4" />
-                      <span>Staying at: {hotelOrigin.name}</span>
-                  </div>
-                )}
-              </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#D5D0C0' }}>
+      {/* Header with Japanese Wave Background */}
+      <header className="relative overflow-hidden" style={{ backgroundColor: '#C8B8A5', borderBottom: '2px solid #7D7463' }}>
+        <div className="absolute inset-0 opacity-10">
+          <div style={{
+            backgroundImage: `url('/assets/Kanagawa.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            height: '100%',
+            width: '100%',
+          }} />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="p-2 rounded-full transition-all hover:shadow-md" style={{ backgroundColor: '#D6D0C0' }}>
+              <ArrowLeft className="w-5 h-5" style={{ color: '#2c2416' }} />
+            </Link>
+            
+            <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#BF2809' }}>
+              <div className="absolute inset-2 rounded-full border-2 border-[#D6D0C0] opacity-50" />
+              <span className="text-2xl relative z-10" style={{ color: '#D6D0C0' }}>旅</span>
+            </div>
+            
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416', letterSpacing: '0.02em' }}>
+                {trip.trip_name}
+              </h1>
+              {hotelOrigin && (
+                <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                  <Hotel className="w-4 h-4" />
+                  <span>Staying at: {hotelOrigin.name}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </header>
 
-
-{/* Action Buttons Bar */}
-<div className="bg-white border-b border-gray-200 shadow-sm">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-    <div className="flex gap-3">
-      <button
-          onClick={() => setShowHotelOrigin(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-sky-300 to-sky-600 text-white rounded-lg hover:from-sky-400 hover:to-sky-700 transition-all shadow-md"
-        >
-
-        <Hotel className="w-5 h-5" />
-        <span className="font-medium">Add Hotel Origin</span>
-        </button>
-
-      <button
-        onClick={() => setShowPlaceSearch(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all shadow-md"
-      >
-        <MapPinned className="w-5 h-5" />
-        <span className="font-medium">Search Places</span>
-        </button>
-      
-        <button
-          onClick={() => setShowBudgetManager(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md"
-        >
-
-        <Wallet className="w-5 h-5" />
-        <span className="font-medium">Budget Management</span>
-        </button>
-
-        <button
-          onClick={() => setShowRouteOptimizer(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-amber-300 to-orange-500 text-white rounded-lg hover:from-amber-400 hover:to-orange-600 transition-all shadow-md"
-        >
-
-        <Route className="w-5 h-5" />
-        <span className="font-medium">Route Optimizer</span>
-        </button>
-
-        <button
-          onClick={() => setShowMapView(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-300 to-teal-500 text-white rounded-lg hover:from-emerald-400 hover:to-teal-600 transition-all shadow-md"
-        >
-
-        <MapIcon className="w-5 h-5" />
-        <span className="font-medium">Map View</span>
-        </button>
-
-
-        <button
-          onClick={() => setShowExportTrip(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-400 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-800 transition-all shadow-md"
-        >
-
-        <ArrowRightFromLine className="w-5 h-5" />
-        <span className="font-medium">Export Itinerary</span>
-        </button>
-
-        <button
-          onClick={() => setShowViewWishlist(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-fuchsia-400 to-fuchsia-600 text-white rounded-lg hover:from-fuchsia-500 hover:to-fuchsia-700 transition-all shadow-md"
-        >
-
-        <Star className="w-5 h-5" />
-        <span className="font-medium">View Wishlist</span>
-        </button>
-
-
-    </div>
-  </div>
-</div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-6">
-          <div className="w-64 shrink-0">
-            <div className="bg-white rounded-xl shadow-md p-4 sticky top-24">
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Trip Days
-              </h3>
-              <div className="space-y-2">
-                {days.map((day) => (
-                  <button
-                    key={day.dayNumber}
-                    onClick={() => setSelectedDay(day.dayNumber)}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                      selectedDay === day.dayNumber
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-medium">Day {day.dayNumber}</div>
-                    <div className={`text-sm ${selectedDay === day.dayNumber ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className={`text-xs mt-1 ${selectedDay === day.dayNumber ? 'text-blue-200' : 'text-gray-400'}`}>
-                      {day.activities.length} activities
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* Action Buttons with Japanese Color Scheme */}
+      <div style={{ backgroundColor: '#D6D0C0', borderBottom: '1px solid rgba(125, 116, 99, 0.3)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex gap-2 overflow-x-auto">
+            <ActionButton icon={<Hotel className="w-4 h-4" />} label="Hotel" onClick={() => setShowHotelOrigin(true)} />
+            <ActionButton icon={<MapPinned className="w-4 h-4" />} label="Search" onClick={() => setShowPlaceSearch(true)} />
+            <ActionButton icon={<DollarSign className="w-4 h-4" />} label="Budget" onClick={() => setShowBudgetManager(true)} />
+            <ActionButton icon={<Route className="w-4 h-4" />} label="Optimize" onClick={() => setShowRouteOptimizer(true)} />
+            <ActionButton icon={<MapIcon className="w-4 h-4" />} label="Map" onClick={() => setShowMapView(true)} />
+            <ActionButton icon={<ArrowRightFromLine className="w-4 h-4" />} label="Export" onClick={() => setShowExportTrip(true)} />
+            <ActionButton icon={<Star className="w-4 h-4" />} label="Wishlist" onClick={() => setShowViewWishlist(true)} />
           </div>
+        </div>
+      </div>
 
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Desktop Sidebar - Trip Days */}
+            <div className="hidden lg:block w-64 shrink-0">
+              <div className="rounded-xl p-4 sticky top-6 shadow-lg" style={{ backgroundColor: '#C8B8A5', border: '1px solid rgba(125, 116, 99, 0.3)' }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5" style={{ color: '#BF2809' }} />
+                    <h3 className="font-bold" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>Trip Days</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {days.map((day) => (
+                      <button
+                        key={day.dayNumber}
+                        onClick={() => setSelectedDay(day.dayNumber)}
+                        className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
+                          selectedDay === day.dayNumber ? 'shadow-md' : ''
+                        }`}
+                        style={{
+                          backgroundColor: selectedDay === day.dayNumber ? '#BF2809' : '#D6D0C0',
+                          color: selectedDay === day.dayNumber ? '#D6D0C0' : '#2c2416',
+                          fontFamily: "'Noto Sans JP', sans-serif"
+                          }}
+                      >
+                        <div className="font-medium">Day {day.dayNumber}</div>
+                        <div className="text-sm opacity-80">
+                          {day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                        <div className="text-xs mt-1 opacity-70">
+                          {day.activities.length} activities
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  </div>
+              </div>
+              {/* Mobile Day Selector - Dropdown */}
+              <div className="lg:hidden mb-4">
+                <div className="rounded-xl p-4 shadow-lg" style={{ backgroundColor: '#C8B8A5', border: '1px solid rgba(125, 116, 99, 0.3)' }}>
+                  <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                    Select Day
+                  </label>
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(parseInt(e.target.value))}
+                    className="w-full px-4 py-3 rounded-lg border-2 transition-all"
+                    style={{
+                      backgroundColor: '#D6D0C0',
+                      borderColor: 'rgba(125, 116, 99, 0.3)',
+                      color: '#2c2416',
+                      fontFamily: "'Noto Sans JP', sans-serif"
+                    }}
+                  >
+                    {days.map((day) => (
+                      <option key={day.dayNumber} value={day.dayNumber}>
+                        Day {day.dayNumber} - {day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({day.activities.length} activities)
+                      </option>
+                    ))}
+                  </select>
+                 </div>
+              </div>
+
+          {/* Main Activity Area */}
           <div className="flex-1">
-            <div className="bg-white rounded-xl shadow-md">
-              <div className="p-6 border-b border-gray-200">
+            <div className="rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: '#C8B8A5', border: '1px solid rgba(125, 116, 99, 0.3)' }}>
+              <div className="p-6" style={{ backgroundColor: '#D5D0C0', borderBottom: '2px solid #7D7463' }}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Day {selectedDay} Activities</h2>
-                    <p className="text-gray-600 mt-1">
-                      {currentDay?.date.toLocaleDateString('en-US', { 
-                        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-                      })}
+                    <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                      Day {selectedDay} Activities
+                    </h2>
+                    <p className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                      {currentDay?.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </p>
                   </div>
                   <button
@@ -568,10 +486,11 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
                       setEditingActivity(null);
                       setShowActivityModal(true);
                     }}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:shadow-lg"
+                    style={{ backgroundColor: '#BF2809', color: '#D6D0C0', fontFamily: "'Noto Sans JP', sans-serif" }}
                   >
                     <Plus className="w-5 h-5" />
-                    Add Activity
+                    <span>Add Activity</span>
                   </button>
                 </div>
               </div>
@@ -579,12 +498,17 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
               <div className="p-6">
                 {currentDay && currentDay.activities.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="text-gray-400 text-6xl mb-4">📋</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No activities yet</h3>
-                    <p className="text-gray-600 mb-6">Start planning your day by adding activities</p>
+                    <div className="text-6xl mb-4">📋</div>
+                    <h3 className="text-lg font-medium mb-2" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                      No activities yet
+                    </h3>
+                    <p className="mb-6" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                      Start planning your day
+                    </p>
                     <button
                       onClick={() => setShowActivityModal(true)}
-                      className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg transition-all hover:shadow-lg"
+                      style={{ backgroundColor: '#BF2809', color: '#D6D0C0', fontFamily: "'Noto Sans JP', sans-serif" }}
                     >
                       <Plus className="w-5 h-5" />
                       Add First Activity
@@ -593,25 +517,21 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
                 ) : (
                   <div className="space-y-3">
                     {currentDay?.activities.map((activity, index) => (
-                      <div
+                      <ActivityCard
                         key={activity.id}
-                        className={`transition-all ${dragOverIndex === index ? 'mb-8' : ''}`}
-                      >
-                        <ActivityCard
-                          activity={activity}
-                          onEdit={() => {
-                            setEditingActivity(activity);
-                            setShowActivityModal(true);
-                          }}
-                          onDelete={() => handleDeleteActivity(activity.id)}
-                          onDragStart={(e) => handleDragStart(e, activity)}
-                          onDragOver={(e) => handleDragOver(e, index)}
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, selectedDay, index)}
-                          isDragging={draggedActivity?.id === activity.id}
-                          isDragOver={dragOverIndex === index}
-                        />
-                      </div>
+                        activity={activity}
+                        onEdit={() => {
+                          setEditingActivity(activity);
+                          setShowActivityModal(true);
+                        }}
+                        onDelete={() => handleDeleteActivity(activity.id)}
+                        onDragStart={(e) => handleDragStart(e, activity)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, selectedDay, index)}
+                        isDragging={draggedActivity?.id === activity.id}
+                        isDragOver={dragOverIndex === index}
+                      />
                     ))}
                   </div>
                 )}
@@ -621,6 +541,7 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
         </div>
       </main>
 
+      {/* Modals */}
       {showActivityModal && (
         <ActivityModal
           activity={editingActivity || prefilledActivityData}
@@ -628,102 +549,55 @@ const handleOptimizeRoute = async (optimizedActivities: Map<number, Activity[]>)
           onClose={() => {
             setShowActivityModal(false);
             setEditingActivity(null);
-            setPrefilledActivityData(null); // ✅ Clear prefilled data
+            setPrefilledActivityData(null);
           }}
           onSave={editingActivity ? handleUpdateActivity : handleCreateActivity}
         />
       )}
 
-      {showPlaceSearch && (
-        <PlaceSearch
-          prefectureName={trip.prefectures?.name || 'Tokyo'}
-          onClose={() => setShowPlaceSearch(false)}
-          onSelectPlace={handleSelectPlace}
+      {showPlaceSearch && <PlaceSearch prefectureName={trip.prefectures?.name || 'Tokyo'} onClose={() => setShowPlaceSearch(false)} onSelectPlace={handleSelectPlace} />}
+      {showBudgetManager && trip && <BudgetManager tripId={trip.id} activities={days.flatMap(d => d.activities)} tripDuration={days.length} onClose={() => setShowBudgetManager(false)} />}
+      {showHotelOrigin && <HotelOrigin prefectureName={trip.prefectures?.name || 'Tokyo'} currentHotel={hotelOrigin} onClose={() => setShowHotelOrigin(false)} onSelectHotel={handleSelectHotel} />}
+      {showExportTrip && <ExportItinerary trip={trip} days={days} onClose={() => setShowExportTrip(false)} />}
+      {showMapView && <MapOverview days={days} selectedDay={selectedDay} hotelOrigin={hotelOrigin} onClose={() => setShowMapView(false)} />}
+      {showViewWishlist && (
+        <ViewWishlist
+          onClose={() => setShowViewWishlist(false)}
+          onAddToItinerary={(wishlistItem) => {
+            const activityData: Partial<Activity> = {
+              activity_name: wishlistItem.place_name,
+              address: wishlistItem.address || '',
+              latitude: wishlistItem.latitude,
+              longitude: wishlistItem.longitude,
+              place_id: wishlistItem.place_id,
+              category: 'attractions',
+            };
+            setEditingActivity(activityData as any);
+            setShowActivityModal(true);
+          }}
         />
       )}
-
-    {showBudgetManager && trip && (
-        <BudgetManager
-        tripId={trip.id}
-        activities={days.flatMap(d => d.activities)}
-        tripDuration={days.length}
-        onClose={() => setShowBudgetManager(false)}
-      />
-    )}
-
-    {showHotelOrigin && (
-      <HotelOrigin
-        prefectureName={trip.prefectures?.name || 'Tokyo'}
-        currentHotel={hotelOrigin}
-        onClose={() => setShowHotelOrigin(false)}
-        onSelectHotel={handleSelectHotel}
-      />
-    )}
-    
-{showExportTrip && (
-  <ExportItinerary
-    trip={trip}
-    days={days}
-    onClose={() => setShowExportTrip(false)}
-  />
-)}
-
-{showMapView && (
-  <MapOverview
-    days={days}
-    selectedDay={selectedDay}
-    hotelOrigin={hotelOrigin}
-    onClose={() => setShowMapView(false)}
-  />
-)}
-
-
- {showViewWishlist && (
-  <ViewWishlist
-    onClose={() => setShowViewWishlist(false)}
-    onAddToItinerary={(wishlistItem) => {
-      // Convert wishlist item to activity format
-      const activityData: Partial<Activity> = {
-        activity_name: wishlistItem.place_name,
-        address: wishlistItem.address || '',
-        latitude: wishlistItem.latitude,
-        longitude: wishlistItem.longitude,
-        place_id: wishlistItem.place_id,
-        category: 'attractions',
-      };
-      
-      setEditingActivity(activityData as any);
-      setShowActivityModal(true);
-    }}
-  />
-)}
-
-  {showRouteOptimizer && (
-      <RouteOptimizer
-        days={days}
-        selectedDay={selectedDay}
-        hotelOrigin={hotelOrigin}
-        onClose={() => setShowRouteOptimizer(false)}
-        onOptimize={handleOptimizeRoute}
-      />
-    )}
-    
-
+      {showRouteOptimizer && <RouteOptimizer days={days} selectedDay={selectedDay} hotelOrigin={hotelOrigin} onClose={() => setShowRouteOptimizer(false)} onOptimize={handleOptimizeRoute} />}
     </div>
   );
 }
 
-function ActivityCard({ 
-  activity, 
-  onEdit, 
-  onDelete, 
-  onDragStart, 
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  isDragging,
-  isDragOver
-}: {
+// Action Button Component
+function ActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:shadow-md whitespace-nowrap"
+      style={{ backgroundColor: '#C8B8A5', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif", fontSize: '0.875rem' }}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
+// Activity Card Component
+function ActivityCard({ activity, onEdit, onDelete, onDragStart, onDragOver, onDragLeave, onDrop, isDragging, isDragOver }: {
   activity: Activity;
   onEdit: () => void;
   onDelete: () => void;
@@ -743,44 +617,46 @@ function ActivityCard({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`bg-white border-2 rounded-lg p-4 transition-all cursor-move ${
-        isDragging ? 'opacity-50 border-blue-400' : 
-        isDragOver ? 'border-blue-500 bg-blue-50 shadow-lg' :
-        'border-gray-200 hover:shadow-md hover:border-blue-300'
-      }`}
+      className={`rounded-lg p-4 transition-all cursor-move border-2 ${isDragging ? 'opacity-50' : ''} ${isDragOver ? 'shadow-lg scale-105' : ''}`}
+      style={{
+        backgroundColor: '#D6D0C0',
+        borderColor: isDragOver ? '#BF2809' : 'rgba(125, 116, 99, 0.3)',
+      }}
     >
       <div className="flex items-start gap-3">
-        <div className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 pt-1">
+        <div className="cursor-grab active:cursor-grabbing pt-1" style={{ color: '#7D7463' }}>
           <GripVertical className="w-5 h-5" />
         </div>
 
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
-            <div>
-              <h4 className="font-bold text-gray-900 text-lg">{activity.activity_name}</h4>
+            <div className="flex-1">
+              <h4 className="font-bold text-lg mb-1" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                {activity.activity_name}
+              </h4>
               {activity.address && (
-                <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                <p className="text-sm flex items-center gap-1" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                   <MapPin className="w-4 h-4" />
                   {activity.address}
                 </p>
               )}
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${category.color}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${category.color}`} style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
               {category.icon} {category.label}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+          <div className="flex flex-wrap gap-4 text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
             {activity.scheduled_time && (
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 {activity.scheduled_time}
               </div>
             )}
-            {activity.estimated_duration && (
+            {activity.scheduled_end && (
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {activity.estimated_duration} mins
+                {activity.scheduled_end}
               </div>
             )}
             {activity.estimated_cost && (
@@ -792,15 +668,17 @@ function ActivityCard({
           </div>
 
           {activity.notes && (
-            <p className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">{activity.notes}</p>
+            <p className="text-sm mt-2 p-2 rounded" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463', backgroundColor: '#C8B8A5' }}>
+              {activity.notes}
+            </p>
           )}
         </div>
 
         <div className="flex gap-2">
-          <button onClick={onEdit} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+          <button onClick={onEdit} className="p-2 rounded-lg transition-colors" style={{ color: '#BF2809', backgroundColor: 'rgba(191, 40, 9, 0.1)' }}>
             <Edit className="w-4 h-4" />
           </button>
-          <button onClick={onDelete} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <button onClick={onDelete} className="p-2 rounded-lg transition-colors" style={{ color: '#BF2809', backgroundColor: 'rgba(191, 40, 9, 0.1)' }}>
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -809,8 +687,8 @@ function ActivityCard({
   );
 }
 
+// Activity Modal Component
 function ActivityModal({ activity, dayNumber, onClose, onSave }: {
-  // activity can be a full Activity when editing, or a Partial<Activity> when prefilled
   activity: Partial<Activity> | null;
   dayNumber: number;
   onClose: () => void;
@@ -821,7 +699,7 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
     category: activity?.category || 'other',
     address: activity?.address || '',
     scheduled_time: activity?.scheduled_time || '',
-    estimated_duration: activity?.estimated_duration || null,
+    scheduled_end: activity?.scheduled_end || '',
     estimated_cost: activity?.estimated_cost || null,
     notes: activity?.notes || '',
     latitude: activity?.latitude || null,
@@ -830,46 +708,35 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
   });
 
   useEffect(() => {
-  if (activity) {
-    setFormData({
-      activity_name: activity.activity_name || '',
-      category: activity.category || 'other',
-      address: activity.address || '',
-      scheduled_time: activity.scheduled_time || '',
-      estimated_duration: activity.estimated_duration || null,
-      estimated_cost: activity.estimated_cost || null,
-      notes: activity.notes || '',
-      latitude: activity.latitude || null,
-      longitude: activity.longitude || null,
-      place_id: activity.place_id || null,
-    });
-  }
-}, [activity]);
+    if (activity) {
+      setFormData({
+        activity_name: activity.activity_name || '',
+        category: activity.category || 'other',
+        address: activity.address || '',
+        scheduled_time: activity.scheduled_time || '',
+        estimated_cost: activity.estimated_cost || null,
+        notes: activity.notes || '',
+        latitude: activity.latitude || null,
+        longitude: activity.longitude || null,
+        place_id: activity.place_id || null,
+      });
+    }
+  }, [activity]);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searching, setSearching] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize Google Places Autocomplete
   useEffect(() => {
-    // Check if Google Maps is loaded
-    if (!inputRef.current || typeof window === 'undefined' || typeof google === 'undefined') {
-      console.log('Google Maps not loaded yet');
-      return;
-    }
+    if (!inputRef.current || typeof window === 'undefined' || typeof google === 'undefined') return;
 
     try {
-      // Initialize autocomplete
       const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
         fields: ['place_id', 'formatted_address', 'geometry', 'name'],
-        componentRestrictions: { country: 'jp' }, // Restrict to Japan
+        componentRestrictions: { country: 'jp' },
       });
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        
         if (place.geometry && place.geometry.location) {
           setFormData({
             ...formData,
@@ -879,7 +746,6 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
             longitude: place.geometry.location.lng(),
             activity_name: formData.activity_name || place.name || '',
           });
-          setSearchQuery('');
         }
       });
 
@@ -904,156 +770,172 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-linear-to-r from-blue-500 to-purple-600 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">
-              {activity ? 'Edit Activity' : 'Add Activity'} - Day {dayNumber}
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }} onClick={onClose}>
+      <div className="rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#D6D0C0' }} onClick={(e) => e.stopPropagation()}>
+        <div className="h-2 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #D64820 0%, #BF2809 100%)' }} />
+        
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 rounded-full transition-all hover:shadow-md"
+          style={{ backgroundColor: '#C8B8A5' }}
+        >
+          <X size={20} style={{ color: '#2c2416' }} />
+        </button>
+
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl mb-2" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+              {activity && 'id' in activity ? 'Edit Activity' : 'Add Activity'} - Day {dayNumber}
             </h2>
-            <button onClick={onClose} className="text-white hover:text-gray-200">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Activity Name *</label>
-            <input
-              type="text"
-              required
-              value={formData.activity_name}
-              onChange={(e) => setFormData({ ...formData, activity_name: e.target.value })}
-              placeholder="e.g., Visit Senso-ji Temple"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-            <div className="grid grid-cols-2 gap-2">
-              {ACTIVITY_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, category: cat.value })}
-                  className={`px-4 py-3 rounded-lg border-2 text-left transition-colors ${
-                    formData.category === cat.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="text-lg mr-2">{cat.icon}</span>
-                  <span className="text-sm font-medium">{cat.label}</span>
-                </button>
-              ))}
+            <div className="flex items-center gap-4 mt-4">
+              <div className="h-0.5 flex-1" style={{ backgroundColor: '#D64820' }} />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#BF2809' }} />
+              <div className="h-0.5 flex-1" style={{ backgroundColor: '#D64820' }} />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Location on Google Maps
-            </label>
-            <div className="relative">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Search for a place in Japan..."
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-            {typeof google === 'undefined' && (
-              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                ⚠️ Google Maps is loading... If this persists, check your API key.
-              </p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">
-              Start typing to search places in Japan.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Address (Manual Entry)
-            </label>
-            <input
-              type="text"
-              value={formData.address || ''}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Or enter address manually"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Scheduled Time
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Activity Name <span style={{ color: '#D64820' }}>*</span>
               </label>
               <input
-                type="time"
-                value={formData.scheduled_time || ''}
-                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                type="text"
+                required
+                value={formData.activity_name}
+                onChange={(e) => setFormData({ ...formData, activity_name: e.target.value })}
+                placeholder="e.g., Visit Senso-ji Temple"
+                className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (minutes)
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Category <span style={{ color: '#D64820' }}>*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {ACTIVITY_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: cat.value })}
+                    className={`px-4 py-3 rounded-lg border-2 text-left transition-colors ${formData.category === cat.value ? 'border-[#BF2809]' : ''}`}
+                    style={{ 
+                      backgroundColor: formData.category === cat.value ? 'rgba(191, 40, 9, 0.1)' : '#C8B8A5',
+                      borderColor: formData.category === cat.value ? '#BF2809' : 'rgba(125, 116, 99, 0.3)',
+                      fontFamily: "'Noto Sans JP', sans-serif"
+                    }}
+                  >
+                    <span className="text-lg mr-2">{cat.icon}</span>
+                    <span className="text-sm font-medium">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Search Location
+              </label>
+              <div className="relative">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search for a place in Japan..."
+                  className="w-full px-4 py-3 pr-12 rounded-lg border-2 transition-all focus:outline-none"
+                  style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                />
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#7D7463' }} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Address
+              </label>
+              <input
+                type="text"
+                value={formData.address || ''}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Or enter address manually"
+                className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                  Start Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.scheduled_time || ''}
+                  onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                  style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                  End Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.scheduled_end || ''}
+                  onChange={(e) => setFormData({ ...formData, scheduled_end: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                  style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Cost (¥)
               </label>
               <input
                 type="number"
                 min="0"
-                value={formData.estimated_duration || ''}
-                onChange={(e) => setFormData({ ...formData, estimated_duration: parseInt(e.target.value) || null })}
-                placeholder="60"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                step="100"
+                value={formData.estimated_cost || ''}
+                onChange={(e) => setFormData({ ...formData, estimated_cost: parseFloat(e.target.value) || null })}
+                className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                Notes
+              </label>
+              <textarea
+                value={formData.notes || ''}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estimated Cost (¥)
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="100"
-              value={formData.estimated_cost || ''}
-              onChange={(e) => setFormData({ ...formData, estimated_cost: parseFloat(e.target.value) || null })}
-              placeholder="1000"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex gap-3 pt-6">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-lg transition-all border-2"
+              style={{ backgroundColor: 'transparent', borderColor: '#7D7463', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 py-3 rounded-lg transition-all hover:shadow-lg"
+              style={{ backgroundColor: '#BF2809', color: '#D6D0C0', fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              {activity && 'id' in activity ? 'Save Changes' : 'Add Activity'}
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
-            </label>
-            <textarea
-              value={formData.notes || ''}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional notes or reminders..."
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            {activity ? 'Save Changes' : 'Add Activity'}
-          </button>
         </div>
       </div>
     </div>

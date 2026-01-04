@@ -34,6 +34,7 @@ export interface Activity {
   activity_name: string;
   place_id?: string | null;  // ADD THIS LINE
   scheduled_time: string | null;
+  scheduled_end: string | null;
   estimated_duration: number | null;
   estimated_cost: number | null;
   actual_cost: number | null;

@@ -54,27 +54,6 @@ export default function PlaceSearch({
   const { user } = useAuth();
   const [wishlistedPlaces, setWishlistedPlaces] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!mapRef.current || typeof google === 'undefined') return;
-
-    const coordinates = PREFECTURE_COORDINATES[prefectureName] || PREFECTURE_COORDINATES['Tokyo'];
-
-    const mapInstance = new google.maps.Map(mapRef.current, {
-      center: coordinates,
-      zoom: 13,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      streetViewControl: false,
-    });
-
-    const service = new google.maps.places.PlacesService(mapInstance);
-    
-    setMap(mapInstance);
-    setPlacesService(service);
-
-    loadRecommendations(service, coordinates);
-  }, [prefectureName]);
-
   const loadRecommendations = (service: google.maps.places.PlacesService, location: { lat: number; lng: number }) => {
     setLoadingRecommendations(true);
 
@@ -252,152 +231,196 @@ export default function PlaceSearch({
     return null;
   };
 
-  const displayedPlaces = activeTab === 'recommendations' ? recommendations : searchResults;
+  const displayedPlaces = searchResults.length > 0 ? searchResults : recommendations;
+
+  useEffect(() => {
+    if (!mapRef.current || typeof google === 'undefined') return;
+
+    const coordinates = PREFECTURE_COORDINATES[prefectureName] || PREFECTURE_COORDINATES['Tokyo'];
+
+    const mapInstance = new google.maps.Map(mapRef.current, {
+      center: coordinates,
+      zoom: 13,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false,
+    });
+
+    const service = new google.maps.places.PlacesService(mapInstance);
+    
+    setMap(mapInstance);
+    setPlacesService(service);
+
+    loadRecommendations(service, coordinates);
+  }, [prefectureName]);
+
+  useEffect(() => {
+  if (user) {
+    loadWishlistedPlaces();
+  }
+}, [user]);
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div 
+        className="fixed inset-0 flex items-center justify-center p-4 z-50" 
+        style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }}
+        onClick={onClose}
+      >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
+        className="rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
+        style={{ backgroundColor: '#D5D0C0' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-linear-to-r from-blue-500 to-purple-600 p-6 text-white rounded-t-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-bold">Explore {prefectureName}</h2>
-              <p className="text-blue-100 text-sm mt-1">Discover amazing places to visit</p>
-            </div>
-            <button onClick={onClose} className="text-white hover:text-gray-200">
-              <X className="w-6 h-6" />
-            </button>
+      {/* Header */}
+<div className="relative overflow-hidden rounded-t-2xl" style={{ background: 'linear-gradient(to right, #5B7C99, #8B7BA8)' }}>
+  <div className="absolute inset-0 opacity-5">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
           </div>
+  
+  <div className="relative z-10 p-6 text-white">
+    <div className="flex items-center justify-between mb-4">
+      <div className = "flex items-center gap-3">
+    <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#154c8f' }}>
+         <MapPin className="w-6 h-6 text-white" />
+      </div>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ fontFamily: "'Noto Serif JP', serif" }} >Explore {prefectureName}</h2>
+        <p className="text-sm mt-1 opacity-90">Discover amazing places to visit</p>
+      </div>
+      <button onClick={onClose} className="text-white hover:text-gray-200">
+        <X className="w-6 h-6" />
+      </button>
+      </div>
+    </div>
 
-          {/* Search Bar */}
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search for restaurants, attractions, hotels..."
-                className="w-full px-4 py-3 pr-12 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
-              />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || loading}
-              className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
-            </button>
-          </div>
-        </div>
+    {/* Search Bar */}
+    <div className="flex gap-2">
+      <div className="flex-1 relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="Search for restaurants, attractions, hotels..."
+         className="w-full px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
+          style={{ 
+            backgroundColor: '#D6D0C0',
+              color: '#2c2416'
+            }}
+        />
+        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#7D7463' }} />
+      </div>
+      <button
+        onClick={handleSearch}
+        disabled={!searchQuery.trim() || loading}
+        className="px-6 py-3 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ backgroundColor: '#8B7BA8', color: 'white' }}
+      >
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
+      </button>
+    </div>
+  </div> {/* Close relative z-10 */}
+</div> {/* Close header */}
 
         {/* Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Places List */}
-          <div className="w-1/2 border-r border-gray-200 flex flex-col">
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setActiveTab('recommendations')}
-                className={`flex-1 px-4 py-3 font-medium transition-colors ${
-                  activeTab === 'recommendations'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Recommendations ({recommendations.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('search')}
-                className={`flex-1 px-4 py-3 font-medium transition-colors ${
-                  activeTab === 'search'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Search Results ({searchResults.length})
-              </button>
-            </div>
+<div className="flex-1 flex overflow-hidden">
+  {/* Left Panel - Places List */}
+  <div className="w-1/2 flex flex-col" style={{ borderRight: '1px solid rgba(125, 116, 99, 0.3)' }}>
+    <div className="p-4" style={{ backgroundColor: '#C8B8A5', borderBottom: '1px solid rgba(125, 116, 99, 0.3)' }}>
+      <h3 className="font-bold" style={{ color: '#2c2416', fontFamily: "'Noto Serif JP', serif" }}>
+        {searchResults.length > 0 ? `Search Results (${searchResults.length})` : `Recommendations (${recommendations.length})`}
+      </h3>
+    </div>
 
             {/* Places List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loading || loadingRecommendations ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                </div>
-              ) : displayedPlaces.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium">No places found</p>
-                  <p className="text-sm mt-2">Try a different search term</p>
-                </div>
+  <div className="flex items-center justify-center h-64">
+    <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#5B7C99' }} />
+  </div>
+) : displayedPlaces.length === 0 ? (
+  <div className="text-center py-12">
+    <Search className="w-16 h-16 mx-auto mb-4" style={{ color: '#C8B8A5' }} />
+    <p className="text-lg font-medium" style={{ color: '#2c2416', fontFamily: "'Noto Serif JP', serif" }}>
+      No places found
+    </p>
+    <p className="text-sm mt-2" style={{ color: '#7D7463', fontFamily: "'Noto Serif JP', serif" }}>
+      Try a different search term
+    </p>
+  </div>
               ) : (
                 displayedPlaces.map((place) => (
-                  <div
-    key={place.place_id || place.name}
-    role="button"
-    tabIndex={0}
-    onClick={() => handlePlaceClick(place)}
-    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlaceClick(place); } }}
-    className="w-full text-left bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all relative"
-  >
-  {/* Wishlist button - top right */}
   <button
-    onClick={(e) => handleToggleWishlist(place, e)}
-    className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
-      wishlistedPlaces.has(place.place_id || '')
-        ? 'bg-red-500 text-white hover:bg-red-600'
-        : 'bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-300'
-    }`}
-    aria-pressed={wishlistedPlaces.has(place.place_id || '')}
-    aria-label={wishlistedPlaces.has(place.place_id || '') ? 'Remove from wishlist' : 'Add to wishlist'}
+    key={place.place_id}
+    onClick={() => handlePlaceClick(place)}
+    className="w-full text-left rounded-lg p-4 transition-all border-2 relative"
+    style={{
+      backgroundColor: selectedPlace?.place_id === place.place_id ? 'rgba(91, 124, 153, 0.1)' : '#D5D0C0',
+      borderColor: selectedPlace?.place_id === place.place_id ? '#5B7C99' : 'rgba(125, 116, 99, 0.3)',
+    }}
   >
-    <Heart 
-      className={`w-5 h-5 ${wishlistedPlaces.has(place.place_id || '') ? 'fill-current' : ''}`}
-    />
-  </button>
-
-  <div className="flex gap-3">
-    {place.photos && place.photos[0] ? (
-      <img
-        src={getPhotoUrl(place.photos[0])}
-        alt={place.name}
-        className="w-20 h-20 object-cover rounded-lg shrink-0"
+    {/* Wishlist button - keep as is, positioned absolute top-right */}
+    <button
+      onClick={(e) => handleToggleWishlist(place, e)}
+      className="absolute top-3 right-3 p-2 rounded-full transition-all"
+      style={{
+        backgroundColor: wishlistedPlaces.has(place.place_id || '') ? '#E89CAE' : 'white',
+        color: wishlistedPlaces.has(place.place_id || '') ? 'white' : '#C8B8A5',
+        border: wishlistedPlaces.has(place.place_id || '') ? 'none' : '1px solid rgba(125, 116, 99, 0.3)'
+      }}
+      aria-pressed={wishlistedPlaces.has(place.place_id || '')}
+      aria-label={wishlistedPlaces.has(place.place_id || '') ? 'Remove from wishlist' : 'Add to wishlist'}
+    >
+      <Heart 
+        className={`w-5 h-5 ${wishlistedPlaces.has(place.place_id || '') ? 'fill-current' : ''}`}
       />
-    ) : (
-      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-        <ImageIcon className="w-8 h-8 text-gray-400" />
-      </div>
-    )}
+    </button>
 
-    <div className="flex-1 min-w-0 pr-8">
-      <h3 className="font-bold text-gray-900 truncate">{place.name}</h3>
-      <p className="text-sm text-gray-600 truncate mt-1">
-        <MapPin className="w-3 h-3 inline mr-1" />
-        {place.formatted_address}
-      </p>
-      <div className="flex items-center gap-3 mt-2">
-        {place.rating && (
-          <div className="flex items-center gap-1 text-sm">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span className="font-medium">{place.rating}</span>
-            <span className="text-gray-500">({place.user_ratings_total})</span>
-          </div>
-        )}
-        {place.price_level && (
-          <div className="text-sm text-green-600 font-medium">
-            {getPriceLevel(place.price_level)}
-          </div>
-        )}
+    <div className="flex gap-3">
+      {place.photos && place.photos[0] ? (
+        <img
+          src={getPhotoUrl(place.photos[0])}
+          alt={place.name}
+          className="w-20 h-20 object-cover rounded-lg shrink-0"
+        />
+      ) : (
+        <div className="w-20 h-20 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#C8B8A5' }}>
+          <ImageIcon className="w-8 h-8" style={{ color: '#7D7463' }} />
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0 pr-10">
+        <h3 className="font-bold truncate" style={{ color: '#2c2416', fontFamily: "'Noto Serif JP', serif" }}>
+          {place.name}
+        </h3>
+        <p className="text-sm truncate mt-1" style={{ color: '#7D7463', fontFamily: "'Noto Serif JP', serif" }}>
+          <MapPin className="w-3 h-3 inline mr-1" />
+          {place.formatted_address}
+        </p>
+        <div className="flex items-center gap-3 mt-2">
+          {place.rating && (
+            <div className="flex items-center gap-1 text-sm">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              <span className="font-medium" style={{ color: '#2c2416' }}>{place.rating}</span>
+              <span style={{ color: '#7D7463' }}>({place.user_ratings_total})</span>
+            </div>
+          )}
+          {place.price_level && (
+            <div className="text-sm font-medium" style={{ color: '#5B7C99' }}>
+              {getPriceLevel(place.price_level)}
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-</div>
-                ))
+  </button>
+))
               )}
             </div>
           </div>
@@ -428,8 +451,8 @@ export default function PlaceSearch({
 
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     {selectedPlace.rating && (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-900">
+                     <div className="p-4 rounded-lg" style={{ backgroundColor: 'rgba(91, 124, 153, 0.1)' }}>
+                          <div className="flex items-center gap-2" style={{ color: '#5B7C99' }}>
                           <Star className="w-5 h-5" />
                           <span className="font-bold text-lg">{selectedPlace.rating}</span>
                         </div>
@@ -496,7 +519,8 @@ export default function PlaceSearch({
                         onSelectPlace(selectedPlace);
                         onClose();
                       }}
-                      className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-6"
+                      className="w-full text-white py-3 rounded-lg transition-all hover:shadow-lg font-medium mb-6"
+                      style={{ backgroundColor: '#5B7C99' }}
                     >
                       Add to Itinerary
                     </button>
@@ -524,11 +548,15 @@ export default function PlaceSearch({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-lg font-medium">Select a place to view details</p>
-                    <p className="text-sm mt-2">Click on any place from the list</p>
+                    <MapPin className="w-16 h-16 mx-auto mb-4" style={{ color: '#C8B8A5' }} />
+                    <p className="text-lg font-medium mb-2" style={{ color: '#2c2416', fontFamily: "'Noto Serif JP', serif"}}>
+                      Select a place to view details
+                    </p>
+                      <p className="text-sm" style={{ color: '#7D7463' }}>
+                      Click on any place from the list
+                    </p>
                   </div>
                 </div>
               )}

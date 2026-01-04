@@ -5,6 +5,9 @@ import { Plus, MapPin, Calendar, Users, Edit, Trash2, ChevronRight, LogOut, Sett
 import { useAuth } from '@/components/AuthProvider';
 import { LoginPage } from '@/components/LoginPage';
 import ViewWishlist from '@/components/ViewWishlist';
+import { HomePage as HomeComponent } from '@/components/HomePage';
+import { CreateTripForm } from '@/components/CreateTripForm';
+import { LoadingPanel } from '@/components/LoadingPanel';
 import { supabase, Trip } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -144,107 +147,56 @@ export default function HomePage() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
+      <LoadingPanel />
     );
   }
 
   // Show login page if no user (and not loading)
+  // Show login page if no user
   if (!user) {
     return <LoginPage />;
   }
 
   // Show main content
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Itineryo</h1>
-                <p className="text-sm text-gray-500">
-                  {user.user_metadata?.name || user.email}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/settings"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2"
-              >
-                <Settings className="w-5 h-5" />
-              </Link>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-              >
-                <Plus className="w-5 h-5" />
-                <span className="font-medium">Create New Trip</span>
-              </button>
-              <button
-  onClick={() => setShowViewWishlist(true)}
-  className="flex items-center space-x-2 text-gray-600 hover:text-fuchsia-600 px-3 py-2"
->
-  <Star className="w-5 h-5" />
-  <span className="font-medium">Wishlist</span>
-</button>
-              <button
-                onClick={signOut}
-                className="flex items-center space-x-2 text-red-600 hover:text-red-700 px-3 py-2"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {trips.length === 0 ? (
-          <EmptyState onCreateTrip={() => setShowCreateModal(true)} />
-        ) : (
-          <TripList trips={trips} onEdit={setEditingTrip} onDelete={handleDeleteTrip} onOpen={handleOpenTrip} />
-        )}
-      </main>
+    <>
+      <HomeComponent
+        user={user}
+        trips={trips}
+        onCreateTrip={() => setShowCreateModal(true)}
+        onEditTrip={(trip) => setEditingTrip(trip)}
+        onDeleteTrip={(trip) => handleDeleteTrip(trip.id)}
+        onOpenTrip={(trip) => handleOpenTrip(trip.id)}
+        onSignOut={() => { void signOut(); }}
+        onOpenWishlist={() => setShowViewWishlist(true)}
+      />
 
       {/* Create Modal */}
       {showCreateModal && (
-        <TripModal
+        <CreateTripForm
           mode="create"
-          onClose={() => setShowCreateModal(false)}
-          onSave={handleCreateTrip}
           prefectures={prefectures}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTrip}
         />
       )}
 
       {/* Edit Modal */}
       {editingTrip && (
-        <TripModal
+        <CreateTripForm
           mode="edit"
           trip={editingTrip}
-          onClose={() => setEditingTrip(null)}
-          onSave={handleUpdateTrip}
           prefectures={prefectures}
+          onClose={() => setEditingTrip(null)}
+          onSubmit={handleUpdateTrip}
         />
       )}
 
       {/* View Wishlist Modal */}
-{showViewWishlist && (
-  <ViewWishlist
-    onClose={() => setShowViewWishlist(false)}
-  />
-)}
-    </div>
+      {showViewWishlist && (
+        <ViewWishlist onClose={() => setShowViewWishlist(false)} />
+      )}
+    </>
   );
 }
 

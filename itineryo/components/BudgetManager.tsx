@@ -19,7 +19,7 @@ interface Activity {
 interface BudgetManagerProps {
   tripId: string;
   activities: Activity[];
-  tripDuration: number; // Number of days
+  tripDuration: number;
   onClose: () => void;
 }
 
@@ -29,16 +29,16 @@ interface CategoryBreakdown {
   count: number;
 }
 
-// Category colors matching your activity categories
+// Category colors matching Japanese aesthetic
 const CATEGORY_COLORS: Record<string, string> = {
-  dining: '#F97316',
-  shopping: '#EC4899',
+  dining: '#D64820',
+  shopping: '#BF2809',
   attractions: '#A855F7',
-  transportation: '#3B82F6',
-  accommodation: '#10B981',
-  parks: '#059669',
+  transportation: '#7D7463',
+  accommodation: '#059669',
+  parks: '#10B981',
   entertainment: '#6366F1',
-  other: '#6B7280',
+  other: '#C8B8A5',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -67,18 +67,15 @@ export default function BudgetManager({
   }, [activities, selectedDay]);
 
   const calculateBudget = () => {
-    // Filter activities based on selected day
     const filteredActivities = selectedDay === 'all' 
       ? activities 
       : activities.filter(a => a.day_number === selectedDay);
 
-    // Calculate total
     const total = filteredActivities.reduce((sum, activity) => {
       return sum + (activity.estimated_cost || 0);
     }, 0);
     setTotalCost(total);
 
-    // Group by category
     const categoryMap: Record<string, CategoryBreakdown> = {};
     
     filteredActivities.forEach(activity => {
@@ -96,7 +93,6 @@ export default function BudgetManager({
       }
     });
 
-    // Convert to array and sort by amount
     const breakdown = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
     setCategoryBreakdown(breakdown);
   };
@@ -117,7 +113,6 @@ export default function BudgetManager({
   const dailyTotals = getDailyTotals();
   const averageDailySpend = totalCost / tripDuration;
 
-  // Prepare data for pie chart
   const pieChartData = categoryBreakdown.map(item => ({
     name: CATEGORY_LABELS[item.category] || item.category,
     value: item.amount,
@@ -134,96 +129,123 @@ export default function BudgetManager({
   };
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4 z-50 transition-all duration-300" 
+      style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }}
+      onClick={onClose}
+    >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
+        className="bg-linear-to-br from-[#D5D0C0] to-[#C8B8A5] rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-linear-to-r from-green-500 to-emerald-600 p-6 text-white rounded-t-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-8 h-8" />
-              <div>
-                <h2 className="text-2xl font-bold">Budget Management</h2>
-                <p className="text-green-100 text-sm mt-1">Track your expenses and spending</p>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-white hover:text-gray-200">
-              <X className="w-6 h-6" />
-            </button>
+        {/* Header with Japanese-inspired design */}
+        <div className="bg-linear-to-r from-[#6B8E6F] via-[#8BA888] to-[#6B8E6F] p-6 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
           </div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#466149' }}>
+                  <Wallet className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold tracking-wide">Budget Management</h2>
+                  <p className="text-green-50 text-sm mt-1">Track your expenses and spending</p>
+                </div>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all duration-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-          {/* Day Selector Pills */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedDay('all')}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                selectedDay === 'all'
-                  ? 'bg-white text-green-600'
-                  : 'bg-green-600 bg-opacity-30 text-white hover:bg-opacity-50'
-              }`}
-            >
-              Entire Trip
-            </button>
-            {Array.from({ length: tripDuration }, (_, i) => i + 1).map(day => (
+            {/* Day Selector Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               <button
-                key={day}
-                onClick={() => setSelectedDay(day)}
-                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                  selectedDay === day
-                    ? 'bg-white text-green-600'
-                    : 'bg-green-600 bg-opacity-30 text-white hover:bg-opacity-50'
+                onClick={() => setSelectedDay('all')}
+                className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${
+                  selectedDay === 'all'
+                    ? 'bg-white text-[#059669] shadow-lg scale-105'
+                    : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 backdrop-blur-sm'
                 }`}
               >
-                Day {day}
+                Entire Trip
               </button>
-            ))}
+              {Array.from({ length: tripDuration }, (_, i) => i + 1).map(day => (
+                <button
+                    key={day}
+                    onClick={() => setSelectedDay(day)}
+                    className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${
+                      selectedDay === day
+                        ? 'bg-white text-[#059669] shadow-lg scale-105'
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 backdrop-blur-sm'
+                    }`}
+                  >
+                    Day {day}
+                  </button>
+                ))}
+            </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Summary Cards */}
+        {/* Content with beige/cream background */}
+        <div className="flex-1 overflow-y-auto p-6 bg-[#D5D0C0]">
+          {/* Summary Cards with softer colors */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-linear-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-200">
+            <div className="bg-white bg-opacity-90 backdrop-blur-sm p-6 rounded-2xl border-2 border-[#10B981] border-opacity-30 shadow-lg hover:shadow-xl transition-all duration-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-blue-700 font-medium">Total Budget</span>
-                <DollarSign className="w-5 h-5 text-blue-600" />
+                <span className="text-[#059669] font-semibold text-sm uppercase tracking-wide">Total Budget</span>
+                <div className="bg-[#10B981] bg-opacity-10 p-2 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-[#059669]" />
+                </div>
               </div>
-              <div className="text-3xl font-bold text-blue-900">
+              <div className="text-4xl font-bold text-[#059669] mb-1">
                 {formatCurrency(totalCost)}
               </div>
-              <p className="text-sm text-blue-600 mt-1">
+              <p className="text-sm text-[#7D7463]">
                 {selectedDay === 'all' ? 'For entire trip' : `For Day ${selectedDay}`}
               </p>
             </div>
 
-            <div className="bg-linear-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
+            <div className="bg-white bg-opacity-90 backdrop-blur-sm p-6 rounded-2xl border-2 border-[#10B981] border-opacity-30 shadow-lg hover:shadow-xl transition-all duration-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-purple-700 font-medium">Avg per Day</span>
-                <TrendingUp className="w-5 h-5 text-purple-600" />
+                <span className="text-[#059669] font-semibold text-sm uppercase tracking-wide">Avg per Day</span>
+                <div className="bg-[#10B981] bg-opacity-10 p-2 rounded-lg">
+                  <TrendingUp className="w-5 h-5 text-[#059669]" />
+                </div>
               </div>
-              <div className="text-3xl font-bold text-purple-900">
+              <div className="text-4xl font-bold text-[#059669] mb-1">
                 {formatCurrency(selectedDay === 'all' ? averageDailySpend : totalCost)}
               </div>
-              <p className="text-sm text-purple-600 mt-1">
+              <p className="text-sm text-[#7D7463]">
                 {selectedDay === 'all' ? 'Across all days' : 'This day only'}
               </p>
             </div>
 
-            <div className="bg-linear-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-200">
+            <div className="bg-white bg-opacity-90 backdrop-blur-sm p-6 rounded-2xl border-2 border-[#10B981] border-opacity-30 shadow-lg hover:shadow-xl transition-all duration-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-green-700 font-medium">Activities</span>
-                <Calendar className="w-5 h-5 text-green-600" />
+                <span className="text-[#059669] font-semibold text-sm uppercase tracking-wide">Activities</span>
+                <div className="bg-[#10B981] bg-opacity-10 p-2 rounded-lg">
+                  <Calendar className="w-5 h-5 text-[#059669]" />
+                </div>
               </div>
-              <div className="text-3xl font-bold text-green-900">
+              <div className="text-4xl font-bold text-[#059669] mb-1">
                 {selectedDay === 'all' 
                   ? activities.filter(a => (a.estimated_cost || 0) > 0).length 
                   : activities.filter(a => a.day_number === selectedDay && (a.estimated_cost || 0) > 0).length
                 }
               </div>
-              <p className="text-sm text-green-600 mt-1">
+              <p className="text-sm text-[#7D7463]">
                 With expenses
               </p>
             </div>
@@ -231,13 +253,15 @@ export default function BudgetManager({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart */}
-            <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+            <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-[#C8B8A5] border-opacity-30">
               <div className="flex items-center gap-2 mb-4">
-                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                </svg>
-                <h3 className="text-lg font-bold text-gray-900">Spending by Category</h3>
+                <div className="bg-[#10B981] bg-opacity-10 p-2 rounded-lg">
+                  <svg className="w-5 h-5 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#7D7463]">Spending by Category</h3>
               </div>
               
               {categoryBreakdown.length > 0 ? (
@@ -256,7 +280,7 @@ export default function BudgetManager({
                       {pieChartData.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
-                          fill={CATEGORY_COLORS[entry.category] || '#6B7280'} 
+                          fill={CATEGORY_COLORS[entry.category] || '#C8B8A5'} 
                         />
                       ))}
                     </Pie>
@@ -267,9 +291,9 @@ export default function BudgetManager({
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-75 flex items-center justify-center text-gray-500">
+                <div className="h-[300px] flex items-center justify-center text-[#7D7463]">
                   <div className="text-center">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-[#C8B8A5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                     </svg>
@@ -281,35 +305,35 @@ export default function BudgetManager({
             </div>
 
             {/* Category Breakdown List */}
-            <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Category Details</h3>
+            <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-[#C8B8A5] border-opacity-30">
+              <h3 className="text-lg font-bold text-[#7D7463] mb-4">Category Details</h3>
               
               {categoryBreakdown.length > 0 ? (
-                <div className="space-y-3 max-h-75 overflow-y-auto">
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                   {categoryBreakdown.map((item) => (
                     <div 
                       key={item.category}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center justify-between p-4 bg-[#D5D0C0] bg-opacity-50 rounded-xl hover:bg-opacity-70 transition-all duration-200 border border-[#C8B8A5] border-opacity-20"
                     >
                       <div className="flex items-center gap-3">
                         <div 
-                          className="w-4 h-4 rounded-full"
+                          className="w-4 h-4 rounded-full shadow-sm"
                           style={{ backgroundColor: CATEGORY_COLORS[item.category] }}
                         ></div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-semibold text-[#7D7463]">
                             {CATEGORY_LABELS[item.category] || item.category}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-[#7D7463] opacity-70">
                             {item.count} {item.count === 1 ? 'activity' : 'activities'}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">
+                        <div className="font-bold text-[#059669]">
                           {formatCurrency(item.amount)}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-[#7D7463] opacity-70">
                           {getPercentage(item.amount)}%
                         </div>
                       </div>
@@ -317,8 +341,8 @@ export default function BudgetManager({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Wallet className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <div className="text-center py-12 text-[#7D7463]">
+                  <Wallet className="w-16 h-16 mx-auto mb-4 text-[#C8B8A5]" />
                   <p className="font-medium">No expenses tracked</p>
                   <p className="text-sm mt-1">Activities with costs will appear here</p>
                 </div>
@@ -326,10 +350,10 @@ export default function BudgetManager({
             </div>
           </div>
 
-          {/* Daily Breakdown (only shown for "all" view) */}
+          {/* Daily Breakdown */}
           {selectedDay === 'all' && (
-            <div className="mt-6 bg-white border-2 border-gray-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Daily Breakdown</h3>
+            <div className="mt-6 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-[#C8B8A5] border-opacity-30">
+              <h3 className="text-lg font-bold text-[#7D7463] mb-4">Daily Breakdown</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: tripDuration }, (_, i) => i + 1).map(day => {
                   const dayTotal = dailyTotals[day] || 0;
@@ -339,20 +363,20 @@ export default function BudgetManager({
                     <button
                       key={day}
                       onClick={() => setSelectedDay(day)}
-                      className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                      className={`p-4 rounded-xl border-2 transition-all hover:shadow-md ${
                         isHighest && dayTotal > 0
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                          ? 'border-[#10B981] bg-[#10B981] bg-opacity-10 shadow-lg'
+                          : 'border-[#C8B8A5] border-opacity-30 bg-[#D5D0C0] bg-opacity-30 hover:border-[#10B981] hover:border-opacity-50'
                       }`}
                     >
-                      <div className="text-sm font-medium text-gray-600 mb-1">Day {day}</div>
+                      <div className="text-sm font-medium text-[#7D7463] mb-1">Day {day}</div>
                       <div className={`text-xl font-bold ${
-                        isHighest && dayTotal > 0 ? 'text-green-700' : 'text-gray-900'
+                        isHighest && dayTotal > 0 ? 'text-[#059669]' : 'text-[#7D7463]'
                       }`}>
                         {formatCurrency(dayTotal)}
                       </div>
                       {isHighest && dayTotal > 0 && (
-                        <div className="text-xs text-green-600 mt-1">Highest</div>
+                        <div className="text-xs text-[#059669] mt-1 font-medium">Highest</div>
                       )}
                     </button>
                   );

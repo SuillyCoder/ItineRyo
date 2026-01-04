@@ -117,7 +117,7 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
             body: tableData,
             theme: 'grid',
             styles: { fontSize: 9, cellPadding: 3 },
-            headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold' },
+            headStyles: { fillColor: [214, 72, 32], textColor: 255, fontStyle: 'bold' },
             columnStyles: {
               0: { cellWidth: 20 },
               1: { cellWidth: 45 },
@@ -245,10 +245,27 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
   };
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="bg-linear-to-r from-red-400 to-red-700 p-6 text-white rounded-t-2xl">
+        <div className="relative overflow-hidden p-6 text-white rounded-t-2xl" style={{ background: 'linear-gradient(to right, #D64820, #BF2809)' }}>
+          <div className="absolute inset-0 opacity-10">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
+          </div>
+  
+        <div className="relative z-10">
           <div className="flex items-center justify-between">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#BF2809' }}>
+                  <Download className="w-6 h-6 text-white" />
+                </div>
             <h2 className="text-2xl font-bold">Export Itinerary</h2>
             <button
               onClick={onClose}
@@ -257,12 +274,13 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
               <X className="w-6 h-6" />
             </button>
           </div>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Trip Summary</h3>
-            <div className="space-y-1 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold mb-2" style={{ color: '#2c2416' }}>Trip Summary</h3>
+            <div className="space-y-1 text-sm" style={{ color: '#7D7463' }}>
               <p><span className="font-medium">Trip:</span> {trip.trip_name}</p>
               <p><span className="font-medium">Duration:</span> {days.length} days</p>
               <p><span className="font-medium">Activities:</span> {days.reduce((sum, d) => sum + d.activities.length, 0)} total</p>
@@ -275,18 +293,21 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setExportFormat('pdf')}
-                className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                  exportFormat === 'pdf'
-                    ? 'border-red-500 bg-red-50 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow'
-                }`}
+                className="flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all"
+                style={{
+                  borderColor: exportFormat === 'pdf' ? '#D64820' : 'rgba(125, 116, 99, 0.3)',
+                  backgroundColor: exportFormat === 'pdf' ? 'rgba(214, 72, 32, 0.1)' : 'white',
+                  boxShadow: exportFormat === 'pdf' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
               >
-                <FileText className={`w-12 h-12 mb-3 ${
-                  exportFormat === 'pdf' ? 'text-red-600' : 'text-gray-400'
-                }`} />
-                <span className={`font-medium ${
-                  exportFormat === 'pdf' ? 'text-red-700' : 'text-gray-700'
-                }`}>
+               <FileText 
+                className="w-12 h-12 mb-3"
+                style={{ color: exportFormat === 'pdf' ? '#D64820' : '#C8B8A5' }}
+                />
+                <span 
+                  className="font-medium"
+                  style={{ color: exportFormat === 'pdf' ? '#D64820' : '#7D7463' }}
+                >
                   PDF
                 </span>
                 <span className="text-xs text-gray-500 mt-1">Printable format</span>
@@ -294,18 +315,21 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
 
               <button
                 onClick={() => setExportFormat('xlsx')}
-                className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${
-                  exportFormat === 'xlsx'
-                    ? 'border-green-500 bg-green-50 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow'
-                }`}
+                className="flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all"
+                style={{
+                  borderColor: exportFormat === 'xlsx' ? '#6B8E6F' : 'rgba(125, 116, 99, 0.3)',
+                  backgroundColor: exportFormat === 'xlsx' ? 'rgba(107, 142, 111, 0.1)' : 'white',
+                  boxShadow: exportFormat === 'xlsx' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
               >
-                <FileSpreadsheet className={`w-12 h-12 mb-3 ${
-                  exportFormat === 'xlsx' ? 'text-green-600' : 'text-gray-400'
-                }`} />
-                <span className={`font-medium ${
-                  exportFormat === 'xlsx' ? 'text-green-700' : 'text-gray-700'
-                }`}>
+                <FileSpreadsheet 
+                  className="w-12 h-12 mb-3"
+                  style={{ color: exportFormat === 'xlsx' ? '#6B8E6F' : '#C8B8A5' }}
+                />
+                <span 
+                  className="font-medium"
+                  style={{ color: exportFormat === 'xlsx' ? '#6B8E6F' : '#7D7463' }}
+                >
                   Excel
                 </span>
                 <span className="text-xs text-gray-500 mt-1">Editable format</span>
@@ -313,8 +337,8 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
+          <div className="rounded-lg p-4" style={{ backgroundColor: 'rgba(214, 72, 32, 0.1)', border: '1px solid rgba(214, 72, 32, 0.3)' }}>
+            <p className="text-sm" style={{ color: '#7D7463' }}>
               <span className="font-medium">📄 Export includes:</span>
               <br />
               • All days and activities
@@ -328,21 +352,26 @@ export default function ExportItinerary({ trip, days, onClose }: ExportItinerary
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+        <div className="flex justify-end gap-3 p-6" style={{ borderTop: '1px solid rgba(125, 116, 99, 0.3)' }}>
           <button
             onClick={onClose}
-            className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-          >
+            className="px-6 py-2 font-medium transition-colors"
+            style={{ color: '#7D7463' }}
+          > 
             Cancel
           </button>
           <button
             onClick={handleExport}
             disabled={!exportFormat || exporting}
-            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all ${
-              !exportFormat || exporting
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-linear-to-r from-red-400 to-red-700 text-white hover:from-red-500 hover:to-red-800 shadow-md'
-            }`}
+            className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all"
+            style={{
+              backgroundColor: !exportFormat || exporting ? '#C8B8A5' : '',
+              background: !exportFormat || exporting ? '' : 'linear-gradient(to right, #D64820, #BF2809)',
+              color: !exportFormat || exporting ? '#7D7463' : 'white',
+              cursor: !exportFormat || exporting ? 'not-allowed' : 'pointer',
+              opacity: !exportFormat || exporting ? 0.6 : 1,
+              boxShadow: !exportFormat || exporting ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
           >
             {exporting ? (
               <>

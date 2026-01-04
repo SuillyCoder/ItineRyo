@@ -1,11 +1,11 @@
 // ============================================
 // FILE: components/HotelOrigin.tsx
-// Hotel search and selection for trip origin/destination
+// Hotel search and selection - Japanese Design
 // ============================================
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, MapPin, Star, DollarSign, Phone, Globe, Image as ImageIcon, Loader2, Hotel } from 'lucide-react';
+import { Search, X, MapPin, Star, DollarSign, Phone, Globe, Loader2, Hotel } from 'lucide-react';
 
 type PlaceResult = google.maps.places.PlaceResult;
 type PlacePhoto = google.maps.places.PlacePhoto;
@@ -86,7 +86,7 @@ export default function HotelOrigin({
     const request: google.maps.places.PlaceSearchRequest = {
       location,
       radius: 5000,
-      type: 'lodging', // This searches for hotels, hostels, etc.
+      type: 'lodging',
       keyword: 'hotel',
     };
 
@@ -146,9 +146,6 @@ export default function HotelOrigin({
             position: result.geometry.location,
             map: map,
             title: result.name,
-            icon: {
-              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-            },
           });
         }
       }
@@ -185,64 +182,99 @@ export default function HotelOrigin({
   const displayedPlaces = searchResults.length > 0 ? searchResults : recommendations;
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }} onClick={onClose}>
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
+        className="rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden"
+        style={{ backgroundColor: '#D6D0C0' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-linear-to-r from-sky-400 to-sky-600 p-6 text-white rounded-t-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Hotel className="w-8 h-8" />
-              <div>
-                <h2 className="text-2xl font-bold">Select Your Hotel</h2>
-                <p className="text-sky-100 text-sm mt-1">
-                  Choose your accommodation in {prefectureName}
-                </p>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-white hover:text-gray-200">
-              <X className="w-6 h-6" />
-            </button>
+        {/* Header with Kanagawa Wave Background */}
+        <div className="relative overflow-hidden" style={{ backgroundColor: '#7DB9DE' }}>
+          <div className="absolute inset-0 opacity-5">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
           </div>
-
-          {currentHotel && (
-            <div className="bg-sky-500 bg-opacity-30 rounded-lg p-3 mb-4">
-              <div className="text-sm text-sky-100">Current Hotel:</div>
-              <div className="font-medium">{currentHotel.name}</div>
+          
+          <div className="relative z-10 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#5B9BD5' }}>
+                  <Hotel className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                    Select Your Hotel
+                  </h2>
+                  <p className="text-sm mt-1 text-white opacity-90" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                    Choose your accommodation in {prefectureName}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="p-2 rounded-full transition-all hover:shadow-md" 
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <X className="w-6 h-6 text-white" />
+              </button>
             </div>
-          )}
 
-          {/* Search Bar */}
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search for hotels by name or area..."
-                className="w-full px-4 py-3 pr-12 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
-              />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            {currentHotel && (
+              <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <div className="text-sm text-white opacity-80" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                  Current Hotel:
+                </div>
+                <div className="font-medium text-white" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+                  {currentHotel.name}
+                </div>
+              </div>
+            )}
+
+            {/* Search Bar */}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search for hotels by name or area..."
+                  className="w-full px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
+                  style={{ 
+                    backgroundColor: '#D6D0C0',
+                    color: '#2c2416',
+                    fontFamily: "'Noto Sans JP', sans-serif"
+                  }}
+                />
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#7D7463' }} />
+              </div>
+              <button
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || loading}
+                className="px-6 py-3 rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  backgroundColor: '#5B9BD5',
+                  color: 'white',
+                  fontFamily: "'Noto Sans JP', sans-serif"
+                }}
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
+              </button>
             </div>
-            <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || loading}
-              className="px-6 py-3 bg-white text-sky-600 rounded-lg hover:bg-sky-50 transition-colors font-medium disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
-            </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Hotels List */}
-          <div className="w-1/2 border-r border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <h3 className="font-bold text-gray-900">
+          <div className="w-1/2 flex flex-col" style={{ borderRight: '1px solid rgba(125, 116, 99, 0.3)' }}>
+            <div className="p-4" style={{ backgroundColor: '#C8B8A5', borderBottom: '1px solid rgba(125, 116, 99, 0.3)' }}>
+              <h3 className="font-bold" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
                 {searchResults.length > 0 ? `Search Results (${searchResults.length})` : `Recommended Hotels (${recommendations.length})`}
               </h3>
             </div>
@@ -250,22 +282,30 @@ export default function HotelOrigin({
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loading || loadingRecommendations ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
+                  <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#5B9BD5' }} />
                 </div>
               ) : displayedPlaces.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Hotel className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium">No hotels found</p>
-                  <p className="text-sm mt-2">Try a different search term</p>
+                <div className="text-center py-12">
+                  <Hotel className="w-16 h-16 mx-auto mb-4" style={{ color: '#C8B8A5' }} />
+                  <p className="text-lg font-medium" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                    No hotels found
+                  </p>
+                  <p className="text-sm mt-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                    Try a different search term
+                  </p>
                 </div>
               ) : (
                 displayedPlaces.map((place) => (
                   <button
                     key={place.place_id}
                     onClick={() => handlePlaceClick(place)}
-                    className={`w-full text-left bg-white border-2 rounded-lg p-4 hover:border-sky-500 hover:shadow-md transition-all ${
-                      selectedPlace?.place_id === place.place_id ? 'border-sky-500 bg-sky-50' : 'border-gray-200'
+                    className={`w-full text-left rounded-lg p-4 transition-all border-2 ${
+                      selectedPlace?.place_id === place.place_id ? 'shadow-md' : ''
                     }`}
+                    style={{
+                      backgroundColor: selectedPlace?.place_id === place.place_id ? 'rgba(91, 155, 213, 0.1)' : '#D6D0C0',
+                      borderColor: selectedPlace?.place_id === place.place_id ? '#5B9BD5' : 'rgba(125, 116, 99, 0.3)',
+                    }}
                   >
                     <div className="flex gap-3">
                       {place.photos && place.photos[0] ? (
@@ -275,14 +315,16 @@ export default function HotelOrigin({
                           className="w-20 h-20 object-cover rounded-lg shrink-0"
                         />
                       ) : (
-                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                          <Hotel className="w-8 h-8 text-gray-400" />
+                        <div className="w-20 h-20 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#C8B8A5' }}>
+                          <Hotel className="w-8 h-8" style={{ color: '#7D7463' }} />
                         </div>
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 truncate">{place.name}</h3>
-                        <p className="text-sm text-gray-600 truncate mt-1">
+                        <h3 className="font-bold truncate" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                          {place.name}
+                        </h3>
+                        <p className="text-sm truncate mt-1" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                           <MapPin className="w-3 h-3 inline mr-1" />
                           {place.formatted_address}
                         </p>
@@ -290,12 +332,12 @@ export default function HotelOrigin({
                           {place.rating && (
                             <div className="flex items-center gap-1 text-sm">
                               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                              <span className="font-medium">{place.rating}</span>
-                              <span className="text-gray-500">({place.user_ratings_total})</span>
+                              <span className="font-medium" style={{ color: '#2c2416' }}>{place.rating}</span>
+                              <span style={{ color: '#7D7463' }}>({place.user_ratings_total})</span>
                             </div>
                           )}
                           {place.price_level && (
-                            <div className="text-sm text-green-600 font-medium">
+                            <div className="text-sm font-medium" style={{ color: '#5B9BD5' }}>
                               {getPriceLevel(place.price_level)}
                             </div>
                           )}
@@ -311,7 +353,7 @@ export default function HotelOrigin({
           {/* Right Panel - Details & Map */}
           <div className="w-1/2 flex flex-col">
             {/* Map */}
-            <div ref={mapRef} className="h-64 bg-gray-200"></div>
+            <div ref={mapRef} className="h-64" style={{ backgroundColor: '#C8B8A5' }}></div>
 
             {/* Hotel Details */}
             <div className="flex-1 overflow-y-auto p-6">
@@ -325,8 +367,10 @@ export default function HotelOrigin({
                         className="w-full h-48 object-cover rounded-lg mb-4"
                       />
                     )}
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedPlace.name}</h2>
-                    <p className="text-gray-600 flex items-start gap-2">
+                    <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                      {selectedPlace.name}
+                    </h2>
+                    <p className="flex items-start gap-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                       <MapPin className="w-5 h-5 shrink-0 mt-0.5" />
                       {selectedPlace.formatted_address}
                     </p>
@@ -334,45 +378,48 @@ export default function HotelOrigin({
 
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     {selectedPlace.rating && (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-900">
+                      <div className="p-4 rounded-lg" style={{ backgroundColor: 'rgba(91, 155, 213, 0.1)' }}>
+                        <div className="flex items-center gap-2" style={{ color: '#5B9BD5' }}>
                           <Star className="w-5 h-5" />
                           <span className="font-bold text-lg">{selectedPlace.rating}</span>
                         </div>
-                        <p className="text-sm text-blue-700 mt-1">
+                        <p className="text-sm mt-1" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                           {selectedPlace.user_ratings_total} reviews
                         </p>
                       </div>
                     )}
 
                     {selectedPlace.price_level && (
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-900">
+                      <div className="p-4 rounded-lg" style={{ backgroundColor: '#C8B8A5' }}>
+                        <div className="flex items-center gap-2" style={{ color: '#2c2416' }}>
                           <DollarSign className="w-5 h-5" />
                           <span className="font-bold text-lg">{getPriceLevel(selectedPlace.price_level)}</span>
                         </div>
-                        <p className="text-sm text-green-700 mt-1">Price range</p>
+                        <p className="text-sm mt-1" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                          Price range
+                        </p>
                       </div>
                     )}
                   </div>
 
                   {selectedPlace.formatted_phone_number && (
-                    <div className="flex items-center gap-2 text-gray-700 mb-3">
+                    <div className="flex items-center gap-2 mb-3" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                       <Phone className="w-5 h-5" />
-                      <a href={`tel:${selectedPlace.formatted_phone_number}`} className="hover:text-sky-600">
+                      <a href={`tel:${selectedPlace.formatted_phone_number}`} className="hover:opacity-80" style={{ color: '#5B9BD5' }}>
                         {selectedPlace.formatted_phone_number}
                       </a>
                     </div>
                   )}
 
                   {selectedPlace.website && (
-                    <div className="flex items-center gap-2 text-gray-700 mb-6">
+                    <div className="flex items-center gap-2 mb-6" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
                       <Globe className="w-5 h-5" />
                       <a 
                         href={selectedPlace.website} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="hover:text-sky-600 truncate"
+                        className="hover:opacity-80 truncate"
+                        style={{ color: '#5B9BD5' }}
                       >
                         Visit Website
                       </a>
@@ -381,25 +428,36 @@ export default function HotelOrigin({
 
                   <button
                     onClick={handleSelectHotel}
-                    className="w-full bg-sky-600 text-white py-3 rounded-lg hover:bg-sky-700 transition-colors font-medium mb-6"
+                    className="w-full py-3 rounded-lg transition-all hover:shadow-lg font-medium mb-6"
+                    style={{ 
+                      backgroundColor: '#5B9BD5',
+                      color: 'white',
+                      fontFamily: "'Noto Sans JP', sans-serif"
+                    }}
                   >
                     Set as Hotel Origin
                   </button>
 
                   {selectedPlace.reviews && selectedPlace.reviews.length > 0 && (
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-3">Reviews</h3>
+                      <h3 className="font-bold mb-3" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                        Reviews
+                      </h3>
                       <div className="space-y-4">
                         {selectedPlace.reviews.slice(0, 3).map((review, index) => (
-                          <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                          <div key={index} className="p-4 rounded-lg" style={{ backgroundColor: '#C8B8A5' }}>
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-gray-900">{review.author_name}</span>
+                              <span className="font-medium" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                                {review.author_name}
+                              </span>
                               <div className="flex items-center gap-1">
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                <span className="text-sm">{review.rating}</span>
+                                <span className="text-sm" style={{ color: '#2c2416' }}>{review.rating}</span>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 line-clamp-3">{review.text}</p>
+                            <p className="text-sm line-clamp-3" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                              {review.text}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -407,11 +465,15 @@ export default function HotelOrigin({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <Hotel className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-lg font-medium">Select a hotel to view details</p>
-                    <p className="text-sm mt-2">Click on any hotel from the list</p>
+                    <Hotel className="w-16 h-16 mx-auto mb-4" style={{ color: '#C8B8A5' }} />
+                    <p className="text-lg font-medium mb-2" style={{ fontFamily: "'Noto Serif JP', serif", color: '#2c2416' }}>
+                      Select a hotel to view details
+                    </p>
+                    <p className="text-sm" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#7D7463' }}>
+                      Click on any hotel from the list
+                    </p>
                   </div>
                 </div>
               )}

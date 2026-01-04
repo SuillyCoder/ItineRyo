@@ -153,17 +153,35 @@ export default function RouteOptimizer({
   };
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4 z-50" 
+      style={{ backgroundColor: 'rgba(44, 36, 22, 0.7)' }}
+      onClick={onClose}
+    >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+        className="rounded-2xl shadow-2xl w-full max-w-md"
+        style={{ backgroundColor: '#D5D0C0' }}
         onClick={(e) => e.stopPropagation()}
-      >
+        >
         {/* Header */}
-        <div className="bg-linear-to-r from-amber-400 to-orange-500 p-6 text-white rounded-t-2xl">
+        <div className="relative overflow-hidden rounded-t-2xl" style={{ background: 'linear-gradient(to right, #E6B422, #D68910)' }}>
+        <div className="absolute inset-0 opacity-10">
+            <div style={{
+              backgroundImage: `url('/assets/Kanagawa.jpg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '100%',
+              width: '100%',
+            }} />
+          </div>
+  
+        <div className="relative z-10 p-6 text-white" >
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <Route className="w-8 h-8" />
-              <h2 className="text-2xl font-bold">Route Optimizer</h2>
+            <div className="flex items-center gap-3" >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center relative" style={{ backgroundColor: '#ffbd08'}}>
+                  <Route className="w-6 h-6 text-white" />
+                </div>
+              <h2 className="text-2xl font-bold" >Route Optimizer</h2>
             </div>
             {!isOptimizing && (
               <button onClick={onClose} className="text-white hover:text-gray-200">
@@ -171,9 +189,10 @@ export default function RouteOptimizer({
               </button>
             )}
           </div>
-          <p className="text-amber-100 text-sm">
+          <p className="text-white opacity-90 text-sm">
             Using TSP algorithm to find the optimal route
           </p>
+          </div>
         </div>
 
         {/* Content */}
@@ -182,20 +201,20 @@ export default function RouteOptimizer({
             <>
               {/* Mode Selection */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium mb-3" style={{ color: '#2c2416' }}>
                   Optimization Scope
                 </label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setMode('single')}
-                    className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
-                      mode === 'single'
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className="w-full text-left px-4 py-3 rounded-lg border-2 transition-colors"
+                      style={{
+                      borderColor: mode === 'single' ? '#E6B422' : 'rgba(125, 116, 99, 0.3)',
+                      backgroundColor: mode === 'single' ? 'rgba(230, 180, 34, 0.1)' : 'transparent'
+                    }}
                   >
-                    <div className="font-medium text-gray-900">Current Day Only</div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="font-medium" style={{ color: '#2c2416' }}>Current Day Only</div>
+                    <div className="text-sm mt-1" style={{ color: '#7D7463' }}>
                       Optimize Day {selectedDay} activities
                     </div>
                   </button>
@@ -208,8 +227,8 @@ export default function RouteOptimizer({
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="font-medium text-gray-900">All Days</div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="font-medium" style={{ color: '#2c2416' }}>All Days</div>
+                    <div className="text-sm mt-1" style={{ color: '#7D7463' }}>
                       Optimize all {days.length} days in your trip
                     </div>
                   </button>
@@ -217,15 +236,15 @@ export default function RouteOptimizer({
               </div>
 
               {/* Info Box */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-blue-900 mb-2">How it works:</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="rounded-lg p-4 mb-6" style={{ backgroundColor: 'rgba(230, 180, 34, 0.1)', border: '2px solid rgba(230, 180, 34, 0.3)' }}>
+              <h4 className="font-medium mb-2" style={{ color: '#2c2416' }}>How it works:</h4>
+              <ul className="text-sm space-y-1" style={{ color: '#7D7463' }}>
                   <li>• Calculates distances between all activities</li>
                   <li>• Finds the shortest route using TSP algorithm</li>
                   {hotelOrigin ? (
                     <li>• Starts and ends at your hotel: {hotelOrigin.name}</li>
                   ) : (
-                    <li className="text-amber-600">⚠️ No hotel set - optimizing activities only</li>
+                    <li style={{ color: '#D68910' }}>⚠️ No hotel set - optimizing activities only</li>
                   )}
                   <li>• Updates activity order automatically</li>
                 </ul>
@@ -234,7 +253,8 @@ export default function RouteOptimizer({
               {/* Optimize Button */}
               <button
                 onClick={handleOptimize}
-                className="w-full bg-linear-to-r from-amber-400 to-orange-500 text-white py-3 rounded-lg hover:from-amber-500 hover:to-orange-600 transition-all font-medium shadow-md"
+                className="w-full text-white py-3 rounded-lg transition-all hover:shadow-lg font-medium"
+                style={{ background: 'linear-gradient(to right, #E6B422, #D68910)' }}
               >
                 Optimize Route
               </button>
@@ -245,15 +265,15 @@ export default function RouteOptimizer({
           {isOptimizing && !completed && (
             <div className="text-center py-8">
               <div className="relative w-24 h-24 mx-auto mb-6">
-                <Loader2 className="w-24 h-24 text-amber-500 animate-spin" />
+                <Loader2 className="w-24 h-24 animate-spin" style={{ color: '#E6B422' }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-gray-700">{progress}%</span>
+                  <span className="text-lg font-bold " style={{ color: '#2c2416' }}>{progress}%</span>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold mb-2" style={{ color: '#2c2416' }}>
                 Optimizing Your Route...
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-sm" style={{ color: '#7D7463' }}>
                 {mode === 'single' 
                   ? 'Calculating optimal path for Day ' + selectedDay
                   : `Processing ${days.length} days`
@@ -261,8 +281,11 @@ export default function RouteOptimizer({
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
                 <div
-                  className="bg-linear-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
+                className="h-2 rounded-full transition-all duration-300"
+                style={{ 
+                    width: `${progress}%`,
+                    background: 'linear-gradient(to right, #E6B422, #D68910)'
+                }}
                 ></div>
               </div>
             </div>
@@ -271,13 +294,13 @@ export default function RouteOptimizer({
           {/* Success State */}
           {completed && (
             <div className="text-center py-8">
-              <div className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
                 <CheckCircle className="w-16 h-16 text-green-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold mb-2" style={{ color: '#2c2416' }}>
                 Optimization Complete!
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-sm" style={{ color: '#7D7463' }}>
                 Your activities have been reordered for the most efficient route
               </p>
             </div>
@@ -289,7 +312,7 @@ export default function RouteOptimizer({
               <div className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="w-16 h-16 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold mb-2" style={{ color: '#2c2416' }}>
                 Optimization Failed
               </h3>
               <p className="text-red-600 text-sm mb-4">{error}</p>
