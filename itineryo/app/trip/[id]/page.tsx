@@ -63,6 +63,7 @@ export default function TripDetailPage() {
   const [showMapView, setShowMapView] = useState(false);
   const [showViewWishlist, setShowViewWishlist] = useState(false);
   const [prefilledActivityData, setPrefilledActivityData] = useState<Partial<Activity> | null>(null);
+  const [advancedCostMode, setAdvancedCostMode] = useState(false);
 
   const [hotelOrigin, setHotelOrigin] = useState<{
     place_id: string;
@@ -148,6 +149,9 @@ export default function TripDetailPage() {
           scheduled_time: activityData.scheduled_time || null,
           scheduled_end: activityData.scheduled_end || null,
           estimated_cost: activityData.estimated_cost || null,
+          cost_per_head: activityData.cost_per_head || null,
+          extended_cost: activityData.extended_cost || null,
+          prepaid_peso: activityData.prepaid_peso || null,
           category: activityData.category,
           latitude: activityData.latitude || null,
           longitude: activityData.longitude || null,
@@ -178,6 +182,9 @@ export default function TripDetailPage() {
       if (activityData.scheduled_time !== undefined) updateData.scheduled_time = activityData.scheduled_time || null;
       if (activityData.scheduled_end !== undefined) updateData.scheduled_end = activityData.scheduled_end || null;
       if (activityData.estimated_cost !== undefined) updateData.estimated_cost = activityData.estimated_cost || null;
+      if (activityData.cost_per_head !== undefined) updateData.cost_per_head = activityData.cost_per_head || null;
+      if (activityData.extended_cost !== undefined) updateData.extended_cost = activityData.extended_cost || null;
+      if (activityData.prepaid_peso !== undefined) updateData.prepaid_peso = activityData.prepaid_peso || null;
       if (activityData.latitude !== undefined) updateData.latitude = activityData.latitude || null;
       if (activityData.longitude !== undefined) updateData.longitude = activityData.longitude || null;
       if (activityData.address !== undefined) updateData.address = activityData.address || null;
@@ -688,6 +695,7 @@ function ActivityCard({ activity, onEdit, onDelete, onDragStart, onDragOver, onD
 }
 
 // Activity Modal Component
+// Activity Modal Component
 function ActivityModal({ activity, dayNumber, onClose, onSave }: {
   activity: Partial<Activity> | null;
   dayNumber: number;
@@ -701,11 +709,17 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
     scheduled_time: activity?.scheduled_time || '',
     scheduled_end: activity?.scheduled_end || '',
     estimated_cost: activity?.estimated_cost || null,
+    cost_per_head: activity?.cost_per_head || null,
+    extended_cost: activity?.extended_cost || null,
+    prepaid_peso: activity?.prepaid_peso || null,
     notes: activity?.notes || '',
     latitude: activity?.latitude || null,
     longitude: activity?.longitude || null,
     place_id: activity?.place_id || null,
   });
+
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [travellers, setTravellers] = useState<number>(1);
 
   useEffect(() => {
     if (activity) {
@@ -714,14 +728,31 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
         category: activity.category || 'other',
         address: activity.address || '',
         scheduled_time: activity.scheduled_time || '',
+        scheduled_end: activity.scheduled_end || '',
         estimated_cost: activity.estimated_cost || null,
+        cost_per_head: activity.cost_per_head || null,
+        extended_cost: activity.extended_cost || null,
+        prepaid_peso: activity.prepaid_peso || null,
         notes: activity.notes || '',
         latitude: activity.latitude || null,
         longitude: activity.longitude || null,
         place_id: activity.place_id || null,
       });
+      
+      // Enable advanced mode if any advanced fields have values
+      if (activity.cost_per_head || activity.extended_cost || activity.prepaid_peso) {
+        setAdvancedMode(true);
+      }
     }
   }, [activity]);
+
+  // Calculate extended cost when cost_per_head or travellers change
+  useEffect(() => {
+    if (advancedMode && formData.cost_per_head && travellers > 0) {
+      const extended = formData.cost_per_head * travellers;
+      setFormData(prev => ({ ...prev, extended_cost: extended }));
+    }
+  }, [formData.cost_per_head, travellers, advancedMode]);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -891,19 +922,102 @@ function ActivityModal({ activity, dayNumber, onClose, onSave }: {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
-                Cost (¥)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="100"
-                value={formData.estimated_cost || ''}
-                onChange={(e) => setFormData({ ...formData, estimated_cost: parseFloat(e.target.value) || null })}
-                className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
-                style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
-              />
+            {/* Cost Section with Advanced Mode Toggle */}
+            <div className="rounded-lg p-4 border-2" style={{ backgroundColor: '#C8B8A5', borderColor: 'rgba(125, 116, 99, 0.3)' }}>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                  Cost Management
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setAdvancedMode(!advancedMode)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ 
+                    backgroundColor: advancedMode ? '#BF2809' : '#D6D0C0',
+                    color: advancedMode ? '#D6D0C0' : '#2c2416',
+                    fontFamily: "'Noto Sans JP', sans-serif"
+                  }}
+                >
+                  {advancedMode ? '✓ Advanced Mode' : 'Simple Mode'}
+                </button>
+              </div>
+
+              {!advancedMode ? (
+                <div>
+                  <label className="block text-xs font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                    Total Cost (¥)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={formData.estimated_cost || ''}
+                    onChange={(e) => setFormData({ ...formData, estimated_cost: parseFloat(e.target.value) || null })}
+                    className="w-full px-4 py-3 rounded-lg border-2 transition-all focus:outline-none"
+                    style={{ backgroundColor: '#D6D0C0', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                        Cost Per Head (¥)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={formData.cost_per_head || ''}
+                        onChange={(e) => setFormData({ ...formData, cost_per_head: parseFloat(e.target.value) || null })}
+                        className="w-full px-4 py-2.5 rounded-lg border-2 transition-all focus:outline-none"
+                        style={{ backgroundColor: '#D6D0C0', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                        Number of Travellers
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={travellers}
+                        onChange={(e) => setTravellers(parseInt(e.target.value) || 1)}
+                        className="w-full px-4 py-2.5 rounded-lg border-2 transition-all focus:outline-none"
+                        style={{ backgroundColor: '#D6D0C0', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                      Extended Cost (¥) <span className="text-xs opacity-70">(Auto-calculated)</span>
+                    </label>
+                    <input
+                      type="number"
+                      disabled
+                      value={formData.extended_cost || ''}
+                      className="w-full px-4 py-2.5 rounded-lg border-2 opacity-75 cursor-not-allowed"
+                      style={{ backgroundColor: '#D6D0C0', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-2" style={{ fontFamily: "'Noto Sans JP', sans-serif", color: '#2c2416' }}>
+                      Pre-Paid Peso (₱)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={formData.prepaid_peso || ''}
+                      onChange={(e) => setFormData({ ...formData, prepaid_peso: parseFloat(e.target.value) || null })}
+                      className="w-full px-4 py-2.5 rounded-lg border-2 transition-all focus:outline-none"
+                      style={{ backgroundColor: '#D6D0C0', borderColor: 'rgba(125, 116, 99, 0.3)', color: '#2c2416', fontFamily: "'Noto Sans JP', sans-serif" }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

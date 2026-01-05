@@ -37,6 +37,9 @@ export interface Activity {
   scheduled_end: string | null;
   estimated_duration: number | null;
   estimated_cost: number | null;
+  cost_per_head: number | null;
+  extended_cost: number | null;
+  prepaid_peso: number | null;
   actual_cost: number | null;
   category: string | ' ';
   latitude: number | null;
