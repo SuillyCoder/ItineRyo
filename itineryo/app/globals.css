@@ -48,37 +48,40 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+  /* FALLBACK HEX COLORS: use stable hex values to avoid modern color functions (oklch/lab)
+     which can break PDF/html-to-canvas parsers (html2canvas/jsPDF). These values
+     intentionally match the current theme palette reasonably closely. */
+  --background: #F4EFE8; /* light beige */
+  --foreground: #2C2416; /* dark brown */
+  --card: #FFFFFF;
+  --card-foreground: #2C2416;
+  --popover: #FFFFFF;
+  --popover-foreground: #2C2416;
+  --primary: #D64820; /* orange-red */
+  --primary-foreground: #FFFFFF;
+  --secondary: #C8B8A5; /* neutral beige */
+  --secondary-foreground: #2C2416;
+  --muted: #C8B8A5;
+  --muted-foreground: #7D7463;
+  --accent: #C8B8A5;
+  --accent-foreground: #2C2416;
+  --destructive: #BF2809;
+  --border: #E7E0D6;
+  --input: #EDE6DC;
+  --ring: #D5D0C0;
+  --chart-1: #B35C3A;
+  --chart-2: #A98A6E;
+  --chart-3: #8B6E6F;
+  --chart-4: #C1A58C;
+  --chart-5: #BFA98A;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2C2416;
+  --sidebar-primary: #D64820;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #C8B8A5;
+  --sidebar-accent-foreground: #2C2416;
+  --sidebar-border: #E7E0D6;
+  --sidebar-ring: #D5D0C0;
 }
 
 .dark {
