@@ -262,7 +262,7 @@ const handleExportPDF = async () => {
                     className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${
                       selectedDay === day
                         ? 'bg-white text-[#059669] shadow-lg scale-105'
-                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 backdrop-blur-sm'
+                        : 'bg-white bg-opacity-20 text-[#059669] hover:bg-opacity-30 backdrop-blur-sm'
                     }`}
                   >
                     Day {day}
